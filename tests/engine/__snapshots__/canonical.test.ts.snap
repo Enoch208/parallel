@@ -1,0 +1,42 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`canonical scenario > matches the locked before and after figures 1`] = `
+{
+  "after": {
+    "assignedSeats": 14,
+    "duplicateAttendances": 0,
+    "maxAttendableSessions": 14,
+    "teamGoalCoverage": 98.62,
+    "uniqueSessions": 14,
+  },
+  "before": {
+    "assignedSeats": 13,
+    "duplicateAttendances": 8,
+    "maxAttendableSessions": 14,
+    "teamGoalCoverage": 80.8,
+    "uniqueSessions": 5,
+  },
+  "perGoalAfter": [
+    {
+      "coverage": 0.9887,
+      "goalId": "g-agents",
+      "weight": 5,
+    },
+    {
+      "coverage": 0.9913,
+      "goalId": "g-evals",
+      "weight": 4,
+    },
+    {
+      "coverage": 0.9741,
+      "goalId": "g-hiring",
+      "weight": 2,
+    },
+    {
+      "coverage": 0.9831,
+      "goalId": "g-infra",
+      "weight": 3,
+    },
+  ],
+}
+`;
