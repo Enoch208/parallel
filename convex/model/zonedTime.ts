@@ -63,3 +63,11 @@ export function zonedTimeToEpoch(local: string, timeZone: string): number | null
 
   return naive - secondOffset;
 }
+
+export function startOfLocalDay(now: number, timeZone: string): number {
+  const parts = readZonedParts(new Date(now), timeZone);
+  const midnightGuess = Date.UTC(parts.year, parts.month - 1, parts.day, 0, 0, 0);
+  const offset = zonedPartsToUtc(new Date(midnightGuess), timeZone) - midnightGuess;
+
+  return midnightGuess - offset;
+}

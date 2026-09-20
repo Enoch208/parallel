@@ -171,9 +171,16 @@ export default defineSchema({
     membershipId: v.id("memberships"),
     body: v.string(),
     source: v.union(v.literal("email"), v.literal("app")),
+    approved: v.optional(v.boolean()),
   })
     .index("by_conference", ["conferenceId"])
     .index("by_session", ["sessionId"]),
+
+  briefRecipients: defineTable({
+    conferenceId: v.id("conferences"),
+    email: v.string(),
+    addedBy: v.id("memberships"),
+  }).index("by_conference", ["conferenceId"]),
 
   briefs: defineTable({
     conferenceId: v.id("conferences"),

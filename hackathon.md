@@ -64,11 +64,9 @@ cost estimate, which the team lead enters and which is captioned as their own fi
 
 ## Known issues
 
-- The optimizer can leave a teammate unassigned when there are fewer useful sessions than people.
-  That is deliberate — it will not create duplicate attendance just to fill a lane — but an empty
-  lane looks odd.
-- Beam search is checked against brute force on small inputs only; on a large agenda it is a
-  heuristic with no optimality proof.
-- The daily email budget counts a UTC day rather than the conference's local day.
-- Notes have no approval step, so the brief treats every stored note as approved.
-- Brief recipients default to the team lead; a lead cannot yet add outside addresses.
+- Beam search is checked against brute force on small inputs only. On a large agenda it is a
+  heuristic and no optimality proof is claimed.
+- The optimizer will leave a teammate free rather than create duplicate attendance that adds no
+  coverage. The lane says so, and anyone can take a session from it by hand.
+- A send accepted by the email provider whose response never reaches us would be retried, so
+  at-least-once delivery is possible in that narrow window.

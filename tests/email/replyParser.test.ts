@@ -85,3 +85,23 @@ describe("parseReply", () => {
     expect(parsed.intent).toBe("other");
   });
 });
+
+describe("startOfLocalDay", () => {
+  it("anchors the budget window to the conference day, not UTC", async () => {
+    const { startOfLocalDay } = await import("../../convex/model/zonedTime");
+    const duringLaAfternoon = Date.UTC(2026, 1, 22, 23, 30);
+    const laMidnight = startOfLocalDay(duringLaAfternoon, "America/Los_Angeles");
+    const utcMidnight = Date.UTC(2026, 1, 22, 0, 0);
+
+    expect(laMidnight).not.toBe(utcMidnight);
+    expect(new Date(laMidnight).toISOString()).toBe("2026-02-22T08:00:00.000Z");
+  });
+
+  it("puts a late Lagos evening in the same local day", async () => {
+    const { startOfLocalDay } = await import("../../convex/model/zonedTime");
+    const lateEvening = Date.UTC(2026, 8, 20, 22, 0);
+    const start = startOfLocalDay(lateEvening, "Africa/Lagos");
+
+    expect(new Date(start).toISOString()).toBe("2026-09-19T23:00:00.000Z");
+  });
+});

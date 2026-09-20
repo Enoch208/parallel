@@ -190,3 +190,66 @@ export const recordDueTakeawayPrompts = internalMutation({
     return { conferences: conferences.length, recorded };
   },
 });
+
+export const setApproval = mutation({
+  args: { noteId: v.id("notes"), approved: v.boolean() },
+  handler: async (ctx, args) => {
+    const note = await ctx.db.get(args.noteId);
+
+    if (note === null) {
+      throw new Error("That takeaway no longer exists");
+    }
+
+    await ctx.db.patch(args.noteId, { approved: args.approved });
+
+    return { approved: args.approved };
+  },
+});
+
+export const addBriefRecipient = mutation({
+  args: { conferenceId: v.id("conferences"), email: v.string(), addedBy: v.id("memberships") },
+  handler: async (ctx, args) => {
+    const email = args.email.trim().toLowerCase();
+
+    if (!email.includes("@")) {
+      throw new Error("A recipient needs a valid email address");
+    }
+
+    const existing = await ctx.db
+      .query("briefRecipients")
+      .withIndex("by_conference", (q) => q.eq("conferenceId", args.conferenceId))
+      .collect();
+
+    if (existing.some((row) => row.email === email)) {
+      return { added: false };
+    }
+
+    await ctx.db.insert("briefRecipients", {
+      conferenceId: args.conferenceId,
+      email,
+      addedBy: args.addedBy,
+    });
+
+    return { added: true };
+  },
+});
+
+export const briefRecipients = query({
+  args: { conferenceId: v.id("conferences") },
+  handler: async (ctx, args) => {
+    const rows = await ctx.db
+      .query("briefRecipients")
+      .withIndex("by_conference", (q) => q.eq("conferenceId", args.conferenceId))
+      .collect();
+
+    return rows.map((row) => ({ id: row._id, email: row.email }));
+  },
+});
+
+export const removeBriefRecipient = mutation({
+  args: { recipientId: v.id("briefRecipients") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.recipientId);
+    return { removed: true };
+  },
+});

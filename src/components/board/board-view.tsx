@@ -1,4 +1,4 @@
-import type { CoverageSummary } from "@convex/model/types";
+import type { CoverageSummary, SessionSummary } from "@convex/model/types";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ShuffleIcon } from "@hugeicons/core-free-icons";
 import { BoardCounters } from "./board-counters";
@@ -10,6 +10,7 @@ export interface BoardLane {
   readonly memberName: string;
   readonly isLead: boolean;
   readonly cards: readonly LaneCard[];
+  readonly claimable: readonly SessionSummary[];
 }
 
 export function BoardView({
@@ -22,6 +23,7 @@ export function BoardView({
   onOptimize,
   onRepair,
   onRelease,
+  onClaim,
 }: {
   lanes: readonly BoardLane[];
   coverage: CoverageSummary | null;
@@ -32,6 +34,7 @@ export function BoardView({
   onOptimize: () => void;
   onRepair: () => void;
   onRelease: (membershipId: string, sessionId: string) => void;
+  onClaim: (membershipId: string, sessionId: string) => void;
 }) {
   return (
     <div className="flex flex-col gap-6">
@@ -64,8 +67,12 @@ export function BoardView({
             isLead={lane.isLead}
             cards={lane.cards}
             timezone={timezone}
+            claimable={lane.claimable}
             onRelease={(sessionId) => {
               onRelease(lane.membershipId, sessionId);
+            }}
+            onClaim={(sessionId) => {
+              onClaim(lane.membershipId, sessionId);
             }}
           />
         ))}

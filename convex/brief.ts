@@ -53,26 +53,36 @@ export const loadBriefInputs = internalQuery({
         .collect(),
     ]);
 
+    const extraRecipients = await ctx.db
+      .query("briefRecipients")
+      .withIndex("by_conference", (q) => q.eq("conferenceId", args.conferenceId))
+      .collect();
+
     const titleById = new Map(sessionRows.map((session) => [session._id, session.title]));
     const nameById = new Map(memberRows.map((member) => [member._id, member.displayName]));
 
     return {
       eventName: conference.name,
       goals: goalRows.map((goal) => ({ id: goal._id, label: goal.label, weight: goal.weight })),
-      notes: noteRows.map((note) => ({
-        id: note._id,
-        sessionId: note.sessionId,
-        sessionTitle: titleById.get(note.sessionId) ?? "Unknown session",
-        authorName: nameById.get(note.membershipId) ?? "Unknown teammate",
-        body: note.body,
-      })),
+      notes: noteRows
+        .filter((note) => note.approved !== false)
+        .map((note) => ({
+          id: note._id,
+          sessionId: note.sessionId,
+          sessionTitle: titleById.get(note.sessionId) ?? "Unknown session",
+          authorName: nameById.get(note.membershipId) ?? "Unknown teammate",
+          body: note.body,
+        })),
       sessions: sessionRows.map((session) => ({
         id: session._id,
         title: session.title,
         track: session.track,
         speakers: session.speakers,
       })),
-      recipients: memberRows.filter((member) => member.isLead).map((member) => member.email),
+      recipients: [
+        ...memberRows.filter((member) => member.isLead).map((member) => member.email),
+        ...extraRecipients.map((row) => row.email),
+      ],
     };
   },
 });

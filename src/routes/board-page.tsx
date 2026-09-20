@@ -50,6 +50,7 @@ export function BoardPage() {
   const bestCandidate =
     candidates === undefined || candidates.length === 0 ? null : (candidates[0] ?? null);
   const proposeCover = useMutation(api.cover.proposeCover);
+  const claim = useMutation(api.assignments.claim);
   const [asking, setAsking] = useState(false);
 
   const startDemo = async () => {
@@ -94,6 +95,19 @@ export function BoardPage() {
     } finally {
       setAsking(false);
     }
+  };
+
+  const runClaim = async (membershipId: string, sessionId: string) => {
+    if (plan === null || plan === undefined) {
+      return;
+    }
+
+    await claim({
+      planId: plan.id as Id<"plans">,
+      sessionId: sessionId as Id<"sessions">,
+      membershipId: membershipId as Id<"memberships">,
+      expectedRevision: plan.conferenceRevision,
+    });
   };
 
   const runRelease = async (membershipId: string, sessionId: string) => {
@@ -183,11 +197,23 @@ export function BoardPage() {
       })
       .sort((a: LaneCard, b: LaneCard) => a.session.startsAt - b.session.startsAt);
 
+    const taken = new Set(cards.map((card) => card.session.id));
+    const claimable = sessions.filter((session) => {
+      if (taken.has(session.id)) {
+        return false;
+      }
+
+      return !cards.some(
+        (card) => card.session.startsAt < session.endsAt && session.startsAt < card.session.endsAt,
+      );
+    });
+
     return {
       membershipId: member.id,
       memberName: member.displayName,
       isLead: member.isLead,
       cards,
+      claimable,
     };
   });
 
@@ -221,6 +247,9 @@ export function BoardPage() {
         }}
         onRelease={(membershipId, sessionId) => {
           void runRelease(membershipId, sessionId);
+        }}
+        onClaim={(membershipId, sessionId) => {
+          void runClaim(membershipId, sessionId);
         }}
       />
 

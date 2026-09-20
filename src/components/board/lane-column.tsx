@@ -1,5 +1,6 @@
 import type { SessionSummary } from "@convex/model/types";
 import { SessionCard, type CardState } from "./session-card";
+import { formatTimeRange } from "@/lib/format-time";
 
 export interface LaneCard {
   readonly session: SessionSummary;
@@ -12,13 +13,17 @@ export function LaneColumn({
   isLead,
   cards,
   timezone,
+  claimable,
   onRelease,
+  onClaim,
 }: {
   memberName: string;
   isLead: boolean;
   cards: readonly LaneCard[];
   timezone: string;
+  claimable: readonly SessionSummary[];
   onRelease?: (sessionId: string) => void;
+  onClaim?: (sessionId: string) => void;
 }) {
   return (
     <section className="flex min-w-[240px] flex-1 flex-col gap-3">
@@ -32,27 +37,52 @@ export function LaneColumn({
         </span>
       </header>
 
-      {cards.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-white/10 p-4 text-xs text-neutral-600">
-          Nothing assigned yet.
+      {cards.length === 0 && (
+        <p className="rounded-2xl border border-dashed border-white/10 p-4 text-xs leading-relaxed text-neutral-500">
+          No session here adds coverage the team does not already have, so this teammate is free.
+          They can still take one below.
         </p>
-      ) : (
-        cards.map((card) => (
-          <SessionCard
-            key={card.session.id}
-            session={card.session}
-            timezone={timezone}
-            state={card.state}
-            reason={card.reason}
-            {...(onRelease === undefined
-              ? {}
-              : {
-                  onRelease: () => {
-                    onRelease(card.session.id);
-                  },
-                })}
-          />
-        ))
+      )}
+
+      {cards.map((card) => (
+        <SessionCard
+          key={card.session.id}
+          session={card.session}
+          timezone={timezone}
+          state={card.state}
+          reason={card.reason}
+          {...(onRelease === undefined
+            ? {}
+            : {
+                onRelease: () => {
+                  onRelease(card.session.id);
+                },
+              })}
+        />
+      ))}
+
+      {onClaim !== undefined && claimable.length > 0 && (
+        <label className="flex flex-col gap-1.5 rounded-2xl border border-white/5 bg-white/[0.02] p-3">
+          <span className="text-[10px] uppercase tracking-wider text-neutral-600">
+            Add a session
+          </span>
+          <select
+            value=""
+            onChange={(event) => {
+              if (event.target.value.length > 0) {
+                onClaim(event.target.value);
+              }
+            }}
+            className="rounded-lg bg-white/[0.04] px-2 py-1.5 text-xs text-neutral-300 outline-none"
+          >
+            <option value="">Choose a session…</option>
+            {claimable.map((session) => (
+              <option key={session.id} value={session.id}>
+                {formatTimeRange(session.startsAt, session.endsAt, timezone)} · {session.title}
+              </option>
+            ))}
+          </select>
+        </label>
       )}
     </section>
   );

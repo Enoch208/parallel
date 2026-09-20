@@ -4,7 +4,7 @@ import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { type PlanEmailSession } from "./model/agentmailClient";
 import { makeToken } from "./model/threadRouting";
-const dayMs = 24 * 60 * 60 * 1000;
+import { startOfLocalDay } from "./model/zonedTime";
 
 export interface PlanTarget {
   membershipId: Id<"memberships">;
@@ -189,7 +189,9 @@ export const sendGate = internalQuery({
       .query("outboundSends")
       .withIndex("by_idempotency", (q) => q.eq("idempotencyKey", args.idempotencyKey))
       .first();
-    const since = Date.now() - (Date.now() % dayMs);
+    const conference = await ctx.db.get(args.conferenceId);
+    const timeZone = conference === null ? "UTC" : conference.timezone;
+    const since = startOfLocalDay(Date.now(), timeZone);
     const rows = await ctx.db
       .query("outboundSends")
       .withIndex("by_conference", (q) => q.eq("conferenceId", args.conferenceId))
