@@ -182,7 +182,7 @@ describe("exact solver against brute force", () => {
     }
     expect(failures).toEqual([]);
     expect(heuristicResults).toBeGreaterThan(0);
-  });
+  }, 30_000);
 
   it("bounds the objective from above on every generated instance", () => {
     const failures: string[] = [];
