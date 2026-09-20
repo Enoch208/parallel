@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { scoreFingerprint } from "./model/scoreFingerprint";
 import { action, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
@@ -155,7 +156,22 @@ export const writeScores = internalMutation({
         .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
         .collect();
 
+      const session = await ctx.db.get(sessionId);
+
       for (const row of rows) {
+        const goal = await ctx.db.get(row.goalId);
+        const fingerprint =
+          session === null || goal === null
+            ? undefined
+            : scoreFingerprint({
+                sessionTitle: session.title,
+                sessionTrack: session.track,
+                sessionRoom: session.room,
+                speakers: session.speakers,
+                goalLabel: goal.label,
+                model: args.model,
+              });
+
         const previous = existing.find((doc) => doc.goalId === row.goalId);
 
         if (previous === undefined) {
@@ -166,6 +182,7 @@ export const writeScores = internalMutation({
             relevance: row.relevance,
             reason: row.reason,
             model: args.model,
+            ...(fingerprint === undefined ? {} : { inputFingerprint: fingerprint }),
           });
           inserted += 1;
         } else {
@@ -173,6 +190,7 @@ export const writeScores = internalMutation({
             relevance: row.relevance,
             reason: row.reason,
             model: args.model,
+            ...(fingerprint === undefined ? {} : { inputFingerprint: fingerprint }),
           });
           replaced += 1;
         }

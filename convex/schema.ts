@@ -68,6 +68,7 @@ export default defineSchema({
     relevance: v.number(),
     reason: v.string(),
     model: v.string(),
+    inputFingerprint: v.optional(v.string()),
   })
     .index("by_conference", ["conferenceId"])
     .index("by_session", ["sessionId"]),
