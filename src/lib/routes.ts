@@ -6,6 +6,7 @@ export const appRoutes = {
   notes: "/notes",
   brief: "/brief",
   judges: "/judges",
+  evidence: "/evidence",
 } as const;
 
 export type AppHref = (typeof appRoutes)[keyof typeof appRoutes];

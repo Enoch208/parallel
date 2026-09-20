@@ -33,7 +33,7 @@ export function AppSidebar() {
           label="Brief"
           href={appRoutes.brief}
           icon={DocumentValidationIcon}
-          items={[]}
+          items={[{ label: "Evidence", href: appRoutes.evidence }]}
         />
       </nav>
 

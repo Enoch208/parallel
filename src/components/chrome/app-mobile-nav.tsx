@@ -8,6 +8,7 @@ const items = [
   { label: "Goals", href: appRoutes.goals, exact: true },
   { label: "Notes", href: appRoutes.notes, exact: true },
   { label: "Brief", href: appRoutes.brief, exact: true },
+  { label: "Evidence", href: appRoutes.evidence, exact: true },
 ] as const;
 
 export function AppMobileNav() {
