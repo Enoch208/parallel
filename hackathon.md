@@ -6,17 +6,19 @@ Parallel turns a public conference agenda into one coordinated team plan, then r
 real life gets in the way. Teammates never open the app — the plan arrives by email and changes
 come back as ordinary replies.
 
-- **Live:** https://colorful-duck-212.convex.site
+- **Live:** https://joyous-akita-768.convex.site
 - **Repo:** https://github.com/Enoch208/parallel
 - **Demo video:** not yet recorded
 - **Posts:** not yet published
 
 ## Judge path, 60 seconds
 
-1. Open the live URL and press **Try the live team**. You get your own workspace; nothing you do
-   affects another judge.
-2. The board opens on the honest before state: four teammates stacked on the same famous sessions.
-   Press **Optimize**. The cards fan out and three counters move.
+1. Open **[/judges](https://joyous-akita-768.convex.site/judges)** and press **Run the demo**. It
+   runs the real engine on a workspace of your own and shows five steps with the numbers computed
+   as they happen: everyone planning alone, the optimizer splitting the team, a teammate replying
+   that they cannot make a session, the repair moving only that person, and the best-placed
+   teammate being asked to cover.
+2. Press **Open this workspace on the board** to land on the live board for that same workspace.
 3. Open **How Parallel worked** at the bottom of the board to see which service did what, and how
    long each step took.
 4. Open a second tab on the same board. Press **Release** on a card in one tab and watch the other
