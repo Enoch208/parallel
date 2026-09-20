@@ -9,6 +9,7 @@
  */
 
 import type * as activity from "../activity.js";
+import type * as agendaSweep from "../agendaSweep.js";
 import type * as agendaWatch from "../agendaWatch.js";
 import type * as assignments from "../assignments.js";
 import type * as board from "../board.js";
@@ -39,9 +40,11 @@ import type * as engine_reasons from "../engine/reasons.js";
 import type * as engine_searchPlan from "../engine/searchPlan.js";
 import type * as engine_types from "../engine/types.js";
 import type * as evidence from "../evidence.js";
+import type * as firecrawlJobs from "../firecrawlJobs.js";
 import type * as guest from "../guest.js";
 import type * as http from "../http.js";
 import type * as importAgenda from "../importAgenda.js";
+import type * as importWorkflow from "../importWorkflow.js";
 import type * as importWrites from "../importWrites.js";
 import type * as judges from "../judges.js";
 import type * as model_agendaDiff from "../model/agendaDiff.js";
@@ -52,8 +55,10 @@ import type * as model_briefSchema from "../model/briefSchema.js";
 import type * as model_coverRanking from "../model/coverRanking.js";
 import type * as model_demoFixture from "../model/demoFixture.js";
 import type * as model_firecrawlClient from "../model/firecrawlClient.js";
+import type * as model_firecrawlComponent from "../model/firecrawlComponent.js";
 import type * as model_loadCoverInput from "../model/loadCoverInput.js";
 import type * as model_loadOptimizerInput from "../model/loadOptimizerInput.js";
+import type * as model_monitorPayload from "../model/monitorPayload.js";
 import type * as model_naturalPlan from "../model/naturalPlan.js";
 import type * as model_openaiClient from "../model/openaiClient.js";
 import type * as model_replySchema from "../model/replySchema.js";
@@ -63,6 +68,7 @@ import type * as model_svix from "../model/svix.js";
 import type * as model_threadRouting from "../model/threadRouting.js";
 import type * as model_types from "../model/types.js";
 import type * as model_webhookPayload from "../model/webhookPayload.js";
+import type * as model_workpools from "../model/workpools.js";
 import type * as model_zonedTime from "../model/zonedTime.js";
 import type * as notes from "../notes.js";
 import type * as plan from "../plan.js";
@@ -78,6 +84,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   activity: typeof activity;
+  agendaSweep: typeof agendaSweep;
   agendaWatch: typeof agendaWatch;
   assignments: typeof assignments;
   board: typeof board;
@@ -108,9 +115,11 @@ declare const fullApi: ApiFromModules<{
   "engine/searchPlan": typeof engine_searchPlan;
   "engine/types": typeof engine_types;
   evidence: typeof evidence;
+  firecrawlJobs: typeof firecrawlJobs;
   guest: typeof guest;
   http: typeof http;
   importAgenda: typeof importAgenda;
+  importWorkflow: typeof importWorkflow;
   importWrites: typeof importWrites;
   judges: typeof judges;
   "model/agendaDiff": typeof model_agendaDiff;
@@ -121,8 +130,10 @@ declare const fullApi: ApiFromModules<{
   "model/coverRanking": typeof model_coverRanking;
   "model/demoFixture": typeof model_demoFixture;
   "model/firecrawlClient": typeof model_firecrawlClient;
+  "model/firecrawlComponent": typeof model_firecrawlComponent;
   "model/loadCoverInput": typeof model_loadCoverInput;
   "model/loadOptimizerInput": typeof model_loadOptimizerInput;
+  "model/monitorPayload": typeof model_monitorPayload;
   "model/naturalPlan": typeof model_naturalPlan;
   "model/openaiClient": typeof model_openaiClient;
   "model/replySchema": typeof model_replySchema;
@@ -132,6 +143,7 @@ declare const fullApi: ApiFromModules<{
   "model/threadRouting": typeof model_threadRouting;
   "model/types": typeof model_types;
   "model/webhookPayload": typeof model_webhookPayload;
+  "model/workpools": typeof model_workpools;
   "model/zonedTime": typeof model_zonedTime;
   notes: typeof notes;
   plan: typeof plan;
@@ -168,4 +180,7 @@ export declare const internal: FilterApi<
 
 export declare const components: {
   staticHosting: import("@convex-dev/static-hosting/_generated/component.js").ComponentApi<"staticHosting">;
+  workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
+  scoringPool: import("@convex-dev/workpool/_generated/component.js").ComponentApi<"scoringPool">;
+  firecrawl: import("@firecrawl/firecrawl-convex/_generated/component.js").ComponentApi<"firecrawl">;
 };

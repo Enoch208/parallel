@@ -1,8 +1,9 @@
 import { v } from "convex/values";
 import { action, internalMutation, internalQuery, mutation } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { components, internal } from "./_generated/api";
 import { agendaExtractionSchema, agendaSystemPrompt, parseExtraction } from "./model/agendaSchema";
-import { contentHash, scrapeAgenda } from "./model/firecrawlClient";
+import { contentHash } from "./model/firecrawlClient";
+import { scrapeAgendaThroughComponent } from "./model/firecrawlComponent";
 import { extractionModel, structuredOutput } from "./model/openaiClient";
 import { zonedTimeToEpoch } from "./model/zonedTime";
 import {
@@ -82,7 +83,7 @@ export const previewChanges = action({
       return { changes: [], unchanged: 0 };
     }
 
-    const page = await scrapeAgenda(current.agendaUrl, firecrawlKey);
+    const page = await scrapeAgendaThroughComponent(ctx, components.firecrawl, current.agendaUrl);
     const raw = await structuredOutput({
       model: extractionModel,
       system: agendaSystemPrompt,
@@ -269,7 +270,7 @@ export const detectAgendaChange = action({
       };
     }
 
-    const page = await scrapeAgenda(current.agendaUrl, firecrawlKey);
+    const page = await scrapeAgendaThroughComponent(ctx, components.firecrawl, current.agendaUrl);
     const hash = await contentHash(page.markdown);
 
     if (hash === current.lastContentHash && args.force !== true) {

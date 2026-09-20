@@ -1,9 +1,10 @@
 import { v } from "convex/values";
 import { action } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { components, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { agendaExtractionSchema, agendaSystemPrompt, parseExtraction } from "./model/agendaSchema";
-import { contentHash, scrapeAgenda } from "./model/firecrawlClient";
+import { contentHash } from "./model/firecrawlClient";
+import { scrapeAgendaThroughComponent } from "./model/firecrawlComponent";
 import { extractionModel, structuredOutput } from "./model/openaiClient";
 import { sliceForDay } from "./model/agendaSlice";
 import { zonedTimeToEpoch } from "./model/zonedTime";
@@ -36,7 +37,6 @@ export const importAgenda = action({
     dayMarker: v.union(v.string(), v.null()),
   },
   handler: async (ctx, args): Promise<ImportResult> => {
-    const firecrawlKey = requireKey("FIRECRAWL_API_KEY");
     const openaiKey = requireKey("OPENAI_API_KEY");
 
     const created: { teamId: Id<"teams">; conferenceId: Id<"conferences"> } = await ctx.runMutation(
@@ -51,7 +51,7 @@ export const importAgenda = action({
     const conferenceId = created.conferenceId;
 
     const scrapeStart = Date.now();
-    const page = await scrapeAgenda(args.agendaUrl, firecrawlKey);
+    const page = await scrapeAgendaThroughComponent(ctx, components.firecrawl, args.agendaUrl);
     const scrapeMs = Date.now() - scrapeStart;
     const fetchedAt = Date.now();
 
