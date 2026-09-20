@@ -1,3 +1,5 @@
+import { displayTimezone } from "./timezone";
+
 const inboxesEndpoint = "https://api.agentmail.to/v0/inboxes";
 
 export interface SentMessage {
@@ -81,8 +83,9 @@ export function subjectWithToken(headline: string, token: string): string {
 }
 
 export function slotLabel(startsAt: number, endsAt: number, timezone: string): string {
+  const zone = displayTimezone(timezone);
   const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: timezone,
+    timeZone: zone,
     weekday: "short",
     day: "numeric",
     month: "short",
@@ -98,7 +101,8 @@ export function slotLabel(startsAt: number, endsAt: number, timezone: string): s
   const start = new Date(startsAt);
   const end = new Date(endsAt);
 
-  return `${field(start, "weekday")} ${field(start, "day")} ${field(start, "month")} ${clock(start)}-${clock(end)}`;
+  const label = `${field(start, "weekday")} ${field(start, "day")} ${field(start, "month")} ${clock(start)}-${clock(end)}`;
+  return zone === timezone ? label : `${label} UTC`;
 }
 
 function sessionBlock(

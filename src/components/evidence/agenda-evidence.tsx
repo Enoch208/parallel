@@ -1,6 +1,7 @@
 import type { SessionProvenance } from "@convex/evidence";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
+import { displayTimezone } from "@convex/model/timezone";
 import { formatTimeRange } from "@/lib/format-time";
 import { CopyableHash, EvidenceEmpty, Flag } from "./evidence-primitives";
 
@@ -12,7 +13,7 @@ function stamp(at: number, timezone: string): string {
     hour: "numeric",
     minute: "2-digit",
     hour12: false,
-    timeZone: timezone,
+    timeZone: displayTimezone(timezone),
   }).format(new Date(at));
 }
 

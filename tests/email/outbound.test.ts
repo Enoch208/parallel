@@ -64,6 +64,14 @@ describe("buildIdempotencyKey", () => {
 });
 
 describe("slotLabel", () => {
+  it("falls back to UTC and says so rather than throwing on a legacy bad zone", () => {
+    const morning = Date.UTC(2026, 8, 22, 9, 0, 0);
+    expect(() => slotLabel(morning, morning + 60 * 60 * 1000, "Not/AZone")).not.toThrow();
+    expect(slotLabel(morning, morning + 60 * 60 * 1000, "Not/AZone")).toBe(
+      "Tue 22 Sep 09:00-10:00 UTC",
+    );
+  });
+
   it("renders the day and the time range in the venue timezone", () => {
     expect(slotLabel(morning, morning + 60 * 60 * 1000, timezone)).toBe("Tue 22 Sep 09:00-10:00");
   });
