@@ -49,7 +49,7 @@ export function CoverCard({
         type="button"
         onClick={onAsk}
         disabled={asking}
-        className="ml-11 w-fit rounded-full bg-white px-5 py-2 text-xs font-medium text-black transition-colors hover:bg-gray-200 disabled:opacity-60"
+        className="ml-11 flex min-h-10 w-fit items-center rounded-full bg-white px-5 text-xs font-medium text-black transition-colors hover:bg-gray-200 disabled:opacity-60"
       >
         {asking ? "Asking…" : `Ask ${candidate.displayName}`}
       </button>

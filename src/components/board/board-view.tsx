@@ -59,7 +59,7 @@ export function BoardView({
         </button>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+      <div className="no-scrollbar flex flex-col gap-4 pb-4 lg:flex-row lg:overflow-x-auto">
         {lanes.map((lane) => (
           <LaneColumn
             key={lane.membershipId}

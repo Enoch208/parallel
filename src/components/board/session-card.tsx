@@ -45,7 +45,7 @@ export function SessionCard({
           {formatTimeRange(session.startsAt, session.endsAt, timezone)}
         </span>
         {session.track !== null && (
-          <span className="truncate text-[10px] uppercase tracking-wider text-neutral-600">
+          <span className="min-w-0 truncate text-[10px] uppercase tracking-wider text-neutral-400">
             {session.track}
           </span>
         )}
@@ -74,7 +74,7 @@ export function SessionCard({
         <button
           type="button"
           onClick={onRelease}
-          className="w-fit text-[11px] font-medium text-neutral-500 underline-offset-2 transition-colors hover:text-white hover:underline"
+          className="flex min-h-10 w-fit items-center text-[11px] font-medium text-neutral-400 underline-offset-2 transition-colors hover:text-white hover:underline md:min-h-0"
         >
           Release
         </button>

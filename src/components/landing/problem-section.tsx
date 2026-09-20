@@ -37,7 +37,7 @@ export function ProblemSection() {
               className="animate-on-scroll flex gap-6 border-white/5 py-7 first:pt-0 not-last:border-b"
               style={{ animation: `fadeInUp 0.6s ease-out ${String(index * 0.1)}s both` }}
             >
-              <span aria-hidden className="pt-1 font-mono text-xs text-neutral-600">
+              <span aria-hidden className="pt-1 font-mono text-xs text-neutral-400">
                 {String(index + 1).padStart(2, "0")}
               </span>
               <div>

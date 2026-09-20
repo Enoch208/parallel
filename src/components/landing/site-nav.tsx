@@ -25,7 +25,11 @@ export function SiteNav() {
 
         <div className="hidden md:flex items-center gap-6 text-xs font-medium text-neutral-400">
           {landingLinks.map(({ label, href }) => (
-            <a key={label} href={href} className="hover:text-white transition-colors">
+            <a
+              key={label}
+              href={href}
+              className="flex min-h-10 items-center transition-colors hover:text-white"
+            >
               {label}
             </a>
           ))}
@@ -34,7 +38,7 @@ export function SiteNav() {
         <div className="flex items-center gap-2">
           <Link
             to={appRoutes.board}
-            className="group relative flex items-center gap-2 rounded-full bg-neutral-900 px-4 py-2 text-xs font-medium text-white transition-all hover:bg-neutral-800"
+            className="group relative flex min-h-10 items-center gap-2 rounded-full bg-neutral-900 px-4 text-xs font-medium text-white transition-all hover:bg-neutral-800"
             style={bagBorder}
           >
             <span>Open the board</span>

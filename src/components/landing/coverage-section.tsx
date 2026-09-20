@@ -46,14 +46,14 @@ export function CoverageSection() {
             </div>
             <h3 className="text-base font-medium tracking-tight text-white">{measure.name}</h3>
             <p className="text-sm leading-relaxed text-neutral-400">{measure.caption}</p>
-            <span className="mt-auto pt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-600">
+            <span className="mt-auto pt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-400">
               {measure.scale}
             </span>
           </div>
         ))}
       </div>
 
-      <p className="animate-on-scroll [animation:fadeInUp_0.6s_ease-out_0.3s_both] mt-8 max-w-2xl text-xs font-light leading-relaxed text-neutral-600">
+      <p className="animate-on-scroll [animation:fadeInUp_0.6s_ease-out_0.3s_both] mt-8 max-w-2xl text-xs font-light leading-relaxed text-neutral-400">
         The drawings are schematic. Figures fill in from your team&rsquo;s own plan, and nothing on
         this page is a sample number.
       </p>

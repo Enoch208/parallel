@@ -26,13 +26,13 @@ export function LaneColumn({
   onClaim?: (sessionId: string) => void;
 }) {
   return (
-    <section className="flex min-w-[240px] flex-1 flex-col gap-3">
+    <section className="flex min-w-0 flex-1 flex-col gap-3 lg:min-w-[240px]">
       <header className="flex items-baseline gap-2 border-b border-white/5 pb-2">
         <h3 className="text-sm font-medium text-white">{memberName}</h3>
         {isLead && (
-          <span className="text-[10px] uppercase tracking-wider text-neutral-600">Lead</span>
+          <span className="text-[10px] uppercase tracking-wider text-neutral-400">Lead</span>
         )}
-        <span className="ml-auto font-mono text-[11px] tabular-nums text-neutral-500">
+        <span className="ml-auto font-mono text-[11px] tabular-nums text-neutral-400">
           {cards.length}
         </span>
       </header>
@@ -63,7 +63,7 @@ export function LaneColumn({
 
       {onClaim !== undefined && claimable.length > 0 && (
         <label className="flex flex-col gap-1.5 rounded-2xl border border-white/5 bg-white/[0.02] p-3">
-          <span className="text-[10px] uppercase tracking-wider text-neutral-600">
+          <span className="text-[10px] uppercase tracking-wider text-neutral-400">
             Add a session
           </span>
           <select
@@ -73,7 +73,7 @@ export function LaneColumn({
                 onClaim(event.target.value);
               }
             }}
-            className="rounded-lg bg-white/[0.04] px-2 py-1.5 text-xs text-neutral-300 outline-none"
+            className="min-h-10 rounded-lg bg-white/[0.04] px-2 py-1.5 text-xs text-neutral-300 md:min-h-0"
           >
             <option value="">Choose a session…</option>
             {claimable.map((session) => (

@@ -30,7 +30,7 @@ export function SiteFooter() {
         </nav>
       </div>
       <div className="mx-auto mt-10 max-w-6xl px-6">
-        <p className="border-t border-white/5 pt-6 text-xs font-light leading-relaxed text-neutral-600">
+        <p className="border-t border-white/5 pt-6 text-xs font-light leading-relaxed text-neutral-400">
           Agenda data comes from public conference pages and is shown with its source. Unofficial,
           and not affiliated with any event organizer. OpenAI, Firecrawl, AgentMail and Convex names
           and logos are trademarks of their respective owners, shown only to say which services
