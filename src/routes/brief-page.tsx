@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAction, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { GenerateBriefResult } from "@convex/brief";
@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/chrome/empty-state";
 import { PageHeading } from "@/components/chrome/page-heading";
 import { BriefBody } from "@/components/knowledge/brief-body";
 import { BriefGeneratePanel } from "@/components/knowledge/brief-generate-panel";
+import { RecipientPanel } from "@/components/knowledge/recipient-panel";
 import { TripSummaryCard } from "@/components/knowledge/trip-summary-card";
 import { errorMessage } from "@/components/setup/setup-shell";
 import { useDemoConference } from "@/lib/use-demo-conference";
@@ -34,6 +35,12 @@ export function BriefPage() {
   const [result, setResult] = useState<GenerateBriefResult | null>(null);
 
   const id = conferenceId === null ? null : (conferenceId as Id<"conferences">);
+  const extraRecipients = useQuery(
+    api.notes.briefRecipients,
+    id === null ? "skip" : { conferenceId: id },
+  );
+  const addRecipient = useMutation(api.notes.addBriefRecipient);
+  const removeRecipient = useMutation(api.notes.removeBriefRecipient);
   const overview = useQuery(
     api.board.conferenceOverview,
     id === null ? "skip" : { conferenceId: id },
@@ -93,6 +100,9 @@ export function BriefPage() {
 
   const { brief, tripSummary } = latest;
   const timezone = overview.conference.timezone;
+  const leadAddresses = overview.members
+    .filter((member) => member.isLead)
+    .map((member) => member.email);
   const blocked =
     overview.goals.length === 0
       ? "Add at least one goal before writing a brief: the brief is grouped by goal."
@@ -107,6 +117,25 @@ export function BriefPage() {
 
       <div className="flex flex-col gap-6">
         <TripSummaryCard summary={tripSummary} />
+
+        <div className="mb-6">
+          <RecipientPanel
+            recipients={extraRecipients ?? []}
+            teamRecipients={leadAddresses}
+            onAdd={async (email) => {
+              const lead = overview.members.find((member) => member.isLead);
+              if (lead === undefined) return;
+              await addRecipient({
+                conferenceId: id,
+                email,
+                addedBy: lead.id as Id<"memberships">,
+              });
+            }}
+            onRemove={async (recipientId) => {
+              await removeRecipient({ recipientId: recipientId as Id<"briefRecipients"> });
+            }}
+          />
+        </div>
 
         <BriefGeneratePanel
           costLabel={tripSummary.tripCostEstimateLabel}

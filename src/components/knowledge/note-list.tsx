@@ -35,12 +35,44 @@ function SourceTag({ source }: { source: ConferenceNote["source"] }) {
   );
 }
 
+function ApprovalToggle({
+  approved,
+  busy,
+  onChange,
+}: {
+  approved: boolean;
+  busy: boolean;
+  onChange: (next: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={() => {
+        onChange(!approved);
+      }}
+      className={cx(
+        "shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors disabled:opacity-50",
+        approved
+          ? "border-white/10 bg-white/[0.04] text-neutral-300 hover:text-white"
+          : "border-amber-500/40 bg-amber-950/20 text-amber-200",
+      )}
+    >
+      {approved ? "In the brief" : "Held back"}
+    </button>
+  );
+}
+
 export function NoteList({
   notes,
   timezone,
+  busyNoteId,
+  onApprovalChange,
 }: {
   notes: readonly ConferenceNote[];
   timezone: string;
+  busyNoteId: string | null;
+  onApprovalChange: (noteId: string, approved: boolean) => void;
 }) {
   return (
     <ul className="flex flex-col gap-3">
@@ -56,9 +88,23 @@ export function NoteList({
                 {note.authorName} · {formatStamp(note.at, timezone)}
               </span>
             </div>
-            <SourceTag source={note.source} />
+            <div className="flex shrink-0 items-center gap-2">
+              <SourceTag source={note.source} />
+              <ApprovalToggle
+                approved={note.approved}
+                busy={busyNoteId === note.id}
+                onChange={(next) => {
+                  onApprovalChange(note.id, next);
+                }}
+              />
+            </div>
           </div>
           <p className="text-sm leading-relaxed font-light text-neutral-300">{note.body}</p>
+          {!note.approved && (
+            <p className="text-xs font-light text-amber-200/80">
+              Held back, so the brief will not use this takeaway.
+            </p>
+          )}
         </li>
       ))}
     </ul>

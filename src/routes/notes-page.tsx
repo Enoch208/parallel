@@ -14,6 +14,8 @@ const pageDescription =
   "Every takeaway the team captured, newest first. Each one says whether it came back as an email reply or was typed in here.";
 
 export function NotesPage() {
+  const setApproval = useMutation(api.notes.setApproval);
+  const [busyNoteId, setBusyNoteId] = useState<string | null>(null);
   const { conferenceId } = useDemoConference();
   const addNote = useMutation(api.notes.addNote);
   const [adding, setAdding] = useState(false);
@@ -106,7 +108,17 @@ export function NotesPage() {
             description="Takeaways also arrive on their own: when a session ends, teammates get an email asking what they learned, and every reply lands here labelled as an email reply. You can add one by hand below."
           />
         ) : (
-          <NoteList notes={notes} timezone={overview.conference.timezone} />
+          <NoteList
+            busyNoteId={busyNoteId}
+            onApprovalChange={(noteId, approved) => {
+              setBusyNoteId(noteId);
+              void setApproval({ noteId: noteId as Id<"notes">, approved }).finally(() => {
+                setBusyNoteId(null);
+              });
+            }}
+            notes={notes}
+            timezone={overview.conference.timezone}
+          />
         )}
 
         <NoteForm

@@ -40,6 +40,7 @@ export const listForConference = query({
           authorName: member === null ? "Unknown teammate" : member.displayName,
           body: row.body,
           source: row.source,
+          approved: row.approved !== false,
           at: row._creationTime,
         };
       }),
