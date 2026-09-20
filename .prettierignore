@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+pnpm-lock.yaml
+convex/_generated
+Parallel Final PRD*.md
+CLAUDE.md
+AGENTS.md
+plans
+design
