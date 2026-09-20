@@ -96,14 +96,16 @@ export function rankCoverCandidates(input: CoverInput, sessionId: string): Cover
     }
 
     const reasons = ["No schedule conflict"];
+    const points = Number(coverageGain.toFixed(1));
 
-    if (coverageGain > 0) {
-      const points = coverageGain.toFixed(1);
+    if (points >= 0.1) {
       reasons.push(
         topGoalLabel === null
-          ? `Restores ${points} Team Goal Coverage points`
-          : `Restores ${points} Team Goal Coverage points, mostly on ${topGoalLabel}`,
+          ? `Restores ${points.toFixed(1)} Team Goal Coverage points`
+          : `Restores ${points.toFixed(1)} Team Goal Coverage points, mostly on ${topGoalLabel}`,
       );
+    } else {
+      reasons.push("Keeps the session covered without leaving another goal short");
     }
 
     if (marksInterest(input, member.id, sessionId)) {

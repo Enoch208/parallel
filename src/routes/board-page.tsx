@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { AppHeader } from "@/components/chrome/app-header";
@@ -50,6 +50,7 @@ export function BoardPage() {
   const bestCandidate =
     candidates === undefined || candidates.length === 0 ? null : (candidates[0] ?? null);
   const proposeCover = useMutation(api.cover.proposeCover);
+  const sendCoverRequest = useAction(api.emailSend.sendCoverRequest);
   const claim = useMutation(api.assignments.claim);
   const [asking, setAsking] = useState(false);
 
@@ -86,12 +87,17 @@ export function BoardPage() {
     if (firstDropped.droppedBy === null) return;
 
     setAsking(true);
+
     try {
-      await proposeCover({
+      const proposal = await proposeCover({
         conferenceId: id,
         sessionId: firstDropped.sessionId,
         fromMember: firstDropped.droppedBy,
       });
+
+      if (proposal.requestId !== null) {
+        await sendCoverRequest({ requestId: proposal.requestId });
+      }
     } finally {
       setAsking(false);
     }

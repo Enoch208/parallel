@@ -101,3 +101,17 @@ describe("rankCoverCandidates", () => {
     expect(first).toEqual(second);
   });
 });
+
+describe("cover reasons", () => {
+  it("never claims it restores 0.0 points", () => {
+    const tinyGain: CoverInput = {
+      ...base,
+      scores: scores.map((score) => ({ ...score, relevance: 0.01 })),
+    };
+
+    for (const candidate of rankCoverCandidates(tinyGain, "dropped")) {
+      expect(candidate.reasons.some((reason) => reason.includes("0.0"))).toBe(false);
+      expect(candidate.reasons.length).toBeGreaterThan(1);
+    }
+  });
+});
