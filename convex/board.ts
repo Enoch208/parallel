@@ -40,6 +40,8 @@ export interface PlanWithAssignments {
   readonly objective: number | null;
   readonly upperBound: number | null;
   readonly nodesExplored: number | null;
+  readonly minimumChangedMembers: number | null;
+  readonly mustChangeMemberIds: readonly string[];
   readonly assignments: readonly AssignmentSummary[];
 }
 
@@ -168,6 +170,8 @@ export const latestPlan = query({
       objective: plan.objective ?? null,
       upperBound: plan.upperBound ?? null,
       nodesExplored: plan.nodesExplored ?? null,
+      minimumChangedMembers: plan.minimumChangedMembers ?? null,
+      mustChangeMemberIds: plan.mustChangeMemberIds ?? [],
       computedAt: plan.computedAt,
       computedAtRevision: plan.computedAtRevision,
       conferenceRevision: conference.constraintRevision,

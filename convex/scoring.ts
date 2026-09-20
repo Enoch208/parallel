@@ -35,6 +35,8 @@ export interface ScoreConferenceResult {
   readonly goals: number;
   readonly calls: number;
   readonly pairsRequested: number;
+  readonly pairsReused: number;
+  readonly sessionsRescored: number;
   readonly pairsScored: number;
   readonly pairsDropped: number;
   readonly inserted: number;
@@ -232,13 +234,21 @@ export const scoreConference = action({
     const goalById = indexById(targets.goals);
     const goalIds = new Set(goalById.keys());
 
+    const reuse: { reusable: number; staleSessionIds: string[] } = await ctx.runQuery(
+      internal.scoringReuse.reuseReport,
+      { conferenceId: args.conferenceId, model: extractionModel },
+    );
+
+    const staleSessions = new Set(reuse.staleSessionIds);
+    const sessionsToScore = targets.sessions.filter((session) => staleSessions.has(session.id));
+
     const startedAt = Date.now();
     let calls = 0;
     let pairsScored = 0;
     let inserted = 0;
     let replaced = 0;
 
-    for (const batch of batchSessions(targets.sessions, sessionsPerCall)) {
+    for (const batch of batchSessions(sessionsToScore, sessionsPerCall)) {
       const raw = await structuredOutput({
         model: extractionModel,
         system: scoringSystemPrompt,
@@ -288,7 +298,10 @@ export const scoreConference = action({
       kind: "sessions_scored",
       sponsor: "openai",
       durationMs,
-      summary: `${extractionModel} scored ${String(pairsScored)} of ${String(pairsRequested)} session and goal pairs across ${String(calls)} calls`,
+      summary:
+        sessionsToScore.length === 0
+          ? `Nothing to score: all ${String(pairsRequested)} session and goal pairs were already current`
+          : `${extractionModel} scored ${String(pairsScored)} pair${pairsScored === 1 ? "" : "s"} across ${String(calls)} call${calls === 1 ? "" : "s"}, reusing ${String(reuse.reusable)} of ${String(pairsRequested)} still current`,
     });
 
     return {
@@ -297,6 +310,8 @@ export const scoreConference = action({
       goals: targets.goals.length,
       calls,
       pairsRequested,
+      pairsReused: reuse.reusable,
+      sessionsRescored: sessionsToScore.length,
       pairsScored,
       pairsDropped: pairsRequested - pairsScored,
       inserted,

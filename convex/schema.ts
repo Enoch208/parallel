@@ -108,6 +108,8 @@ export default defineSchema({
     objective: v.optional(v.number()),
     upperBound: v.optional(v.number()),
     nodesExplored: v.optional(v.number()),
+    minimumChangedMembers: v.optional(v.number()),
+    mustChangeMemberIds: v.optional(v.array(v.id("memberships"))),
   })
     .index("by_conference", ["conferenceId"])
     .index("by_conference_computed", ["conferenceId", "computedAt"]),

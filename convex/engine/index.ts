@@ -8,6 +8,8 @@ export {
 export { canSolveExactly, EXACT_SEARCH_LOG2_LIMIT, objectiveUpperBound } from "./bounds";
 export { computeCoverageSummary } from "./coverage";
 export { exclusionKind, explainAssignment, explainSession } from "./counterfactual";
+export { DISRUPTION_NODE_BUDGET, repairWithMinimumDisruption } from "./disruption";
+export type { DisruptionOutcome, DisruptionPlanOutcome } from "./disruption";
 export { EXACT_NODE_BUDGET, optimizePlanWithProof, repairPlanWithProof } from "./exact";
 export { blockingPinnedSessionIds, findPinConflicts } from "./feasibility";
 export { groupSessionIndicesByWindow, overlaps, sortedSessions } from "./intervals";

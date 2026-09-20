@@ -7,6 +7,7 @@ import {
   countMovedAssignments,
   optimizePlanWithProof,
   repairPlan,
+  repairWithMinimumDisruption,
 } from "./engine";
 import { loadOptimizerInput } from "./model/loadOptimizerInput";
 import { naturalAssignments } from "./model/naturalPlan";
@@ -206,6 +207,7 @@ export const repair = mutation({
     }
 
     const input = await loadOptimizerInput(ctx, args.conferenceId, conference.agendaUrl);
+    const disruption = repairWithMinimumDisruption(input, previous.assignments);
     const proposed = repairPlan(input, previous.assignments);
     const outcome = withoutUnconsentedMoves(proposed, previous.assignments);
     const moved =
@@ -222,6 +224,14 @@ export const repair = mutation({
           ? outcome.blockingPinnedSessionIds.map((id) => id as Id<"sessions">)
           : [],
       computedAt: Date.now(),
+      ...(disruption.kind === "plan"
+        ? {
+            minimumChangedMembers: disruption.minimumChangedMembers,
+            mustChangeMemberIds: disruption.mustChangeMemberIds.map(
+              (id) => id as Id<"memberships">,
+            ),
+          }
+        : {}),
     });
 
     if (outcome.kind === "plan") {
