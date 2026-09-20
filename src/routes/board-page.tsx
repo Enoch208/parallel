@@ -5,6 +5,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { AppHeader } from "@/components/chrome/app-header";
 import { EmptyState } from "@/components/chrome/empty-state";
 import { PageHeading } from "@/components/chrome/page-heading";
+import { ActivityFeed } from "@/components/board/activity-feed";
 import { BoardView, type BoardLane } from "@/components/board/board-view";
 import type { LaneCard } from "@/components/board/lane-column";
 import type { CardState } from "@/components/board/session-card";
@@ -18,6 +19,9 @@ export function BoardPage() {
   const seedDemo = useMutation(api.demo.seedDemoWorkspace);
   const buildNaturalPlan = useMutation(api.plan.naturalPlan);
   const optimize = useMutation(api.plan.optimize);
+  const repair = useMutation(api.plan.repair);
+  const release = useMutation(api.assignments.release);
+  const [repairing, setRepairing] = useState(false);
 
   const id = conferenceId === null ? null : (conferenceId as Id<"conferences">);
   const overview = useQuery(
@@ -30,6 +34,7 @@ export function BoardPage() {
   );
   const plan = useQuery(api.board.latestPlan, id === null ? "skip" : { conferenceId: id });
   const coverage = useQuery(api.plan.coverage, id === null ? "skip" : { conferenceId: id });
+  const activity = useQuery(api.activity.recent, id === null ? "skip" : { conferenceId: id });
 
   const startDemo = async () => {
     setStarting(true);
@@ -42,8 +47,34 @@ export function BoardPage() {
   const runOptimize = async () => {
     if (id === null) return;
     setOptimizing(true);
-    await optimize({ conferenceId: id });
-    setOptimizing(false);
+    try {
+      await optimize({ conferenceId: id });
+    } finally {
+      setOptimizing(false);
+    }
+  };
+
+  const runRepair = async () => {
+    if (id === null) return;
+    setRepairing(true);
+    try {
+      await repair({ conferenceId: id });
+    } finally {
+      setRepairing(false);
+    }
+  };
+
+  const runRelease = async (membershipId: string, sessionId: string) => {
+    if (plan === null || plan === undefined || overview === null || overview === undefined) {
+      return;
+    }
+
+    await release({
+      planId: plan.id as Id<"plans">,
+      sessionId: sessionId as Id<"sessions">,
+      membershipId: membershipId as Id<"memberships">,
+      expectedRevision: plan.conferenceRevision,
+    });
   };
 
   if (id === null) {
@@ -149,17 +180,21 @@ export function BoardPage() {
             : null
         }
         optimizing={optimizing}
-        repairing={false}
+        repairing={repairing}
         onOptimize={() => {
           void runOptimize();
         }}
         onRepair={() => {
-          void runOptimize();
+          void runRepair();
         }}
-        onRelease={() => {
-          void 0;
+        onRelease={(membershipId, sessionId) => {
+          void runRelease(membershipId, sessionId);
         }}
       />
+
+      <div className="mt-6">
+        <ActivityFeed rows={activity ?? []} />
+      </div>
     </>
   );
 }
