@@ -1,0 +1,137 @@
+/* eslint-disable */
+/**
+ * Generated `api` utility.
+ *
+ * THIS CODE IS AUTOMATICALLY GENERATED.
+ *
+ * To regenerate, run `npx convex dev`.
+ * @module
+ */
+
+import type * as assignments from "../assignments.js";
+import type * as board from "../board.js";
+import type * as constraints from "../constraints.js";
+import type * as cover from "../cover.js";
+import type * as demo from "../demo.js";
+import type * as emailIngest from "../emailIngest.js";
+import type * as emailReplies from "../emailReplies.js";
+import type * as emailThreads from "../emailThreads.js";
+import type * as engine_beam from "../engine/beam.js";
+import type * as engine_constants from "../engine/constants.js";
+import type * as engine_context from "../engine/context.js";
+import type * as engine_coverage from "../engine/coverage.js";
+import type * as engine_feasibility from "../engine/feasibility.js";
+import type * as engine_index from "../engine/index.js";
+import type * as engine_intervals from "../engine/intervals.js";
+import type * as engine_lookup from "../engine/lookup.js";
+import type * as engine_objective from "../engine/objective.js";
+import type * as engine_optimize from "../engine/optimize.js";
+import type * as engine_planDiff from "../engine/planDiff.js";
+import type * as engine_reasons from "../engine/reasons.js";
+import type * as engine_searchPlan from "../engine/searchPlan.js";
+import type * as engine_types from "../engine/types.js";
+import type * as http from "../http.js";
+import type * as importAgenda from "../importAgenda.js";
+import type * as importWrites from "../importWrites.js";
+import type * as model_agendaSchema from "../model/agendaSchema.js";
+import type * as model_coverRanking from "../model/coverRanking.js";
+import type * as model_demoFixture from "../model/demoFixture.js";
+import type * as model_firecrawlClient from "../model/firecrawlClient.js";
+import type * as model_loadCoverInput from "../model/loadCoverInput.js";
+import type * as model_loadOptimizerInput from "../model/loadOptimizerInput.js";
+import type * as model_naturalPlan from "../model/naturalPlan.js";
+import type * as model_openaiClient from "../model/openaiClient.js";
+import type * as model_replySchema from "../model/replySchema.js";
+import type * as model_scoringSchema from "../model/scoringSchema.js";
+import type * as model_sessionMatch from "../model/sessionMatch.js";
+import type * as model_svix from "../model/svix.js";
+import type * as model_threadRouting from "../model/threadRouting.js";
+import type * as model_types from "../model/types.js";
+import type * as model_webhookPayload from "../model/webhookPayload.js";
+import type * as model_zonedTime from "../model/zonedTime.js";
+import type * as plan from "../plan.js";
+import type * as scoring from "../scoring.js";
+import type * as team from "../team.js";
+
+import type {
+  ApiFromModules,
+  FilterApi,
+  FunctionReference,
+} from "convex/server";
+
+declare const fullApi: ApiFromModules<{
+  assignments: typeof assignments;
+  board: typeof board;
+  constraints: typeof constraints;
+  cover: typeof cover;
+  demo: typeof demo;
+  emailIngest: typeof emailIngest;
+  emailReplies: typeof emailReplies;
+  emailThreads: typeof emailThreads;
+  "engine/beam": typeof engine_beam;
+  "engine/constants": typeof engine_constants;
+  "engine/context": typeof engine_context;
+  "engine/coverage": typeof engine_coverage;
+  "engine/feasibility": typeof engine_feasibility;
+  "engine/index": typeof engine_index;
+  "engine/intervals": typeof engine_intervals;
+  "engine/lookup": typeof engine_lookup;
+  "engine/objective": typeof engine_objective;
+  "engine/optimize": typeof engine_optimize;
+  "engine/planDiff": typeof engine_planDiff;
+  "engine/reasons": typeof engine_reasons;
+  "engine/searchPlan": typeof engine_searchPlan;
+  "engine/types": typeof engine_types;
+  http: typeof http;
+  importAgenda: typeof importAgenda;
+  importWrites: typeof importWrites;
+  "model/agendaSchema": typeof model_agendaSchema;
+  "model/coverRanking": typeof model_coverRanking;
+  "model/demoFixture": typeof model_demoFixture;
+  "model/firecrawlClient": typeof model_firecrawlClient;
+  "model/loadCoverInput": typeof model_loadCoverInput;
+  "model/loadOptimizerInput": typeof model_loadOptimizerInput;
+  "model/naturalPlan": typeof model_naturalPlan;
+  "model/openaiClient": typeof model_openaiClient;
+  "model/replySchema": typeof model_replySchema;
+  "model/scoringSchema": typeof model_scoringSchema;
+  "model/sessionMatch": typeof model_sessionMatch;
+  "model/svix": typeof model_svix;
+  "model/threadRouting": typeof model_threadRouting;
+  "model/types": typeof model_types;
+  "model/webhookPayload": typeof model_webhookPayload;
+  "model/zonedTime": typeof model_zonedTime;
+  plan: typeof plan;
+  scoring: typeof scoring;
+  team: typeof team;
+}>;
+
+/**
+ * A utility for referencing Convex functions in your app's public API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
+export declare const api: FilterApi<
+  typeof fullApi,
+  FunctionReference<any, "public">
+>;
+
+/**
+ * A utility for referencing Convex functions in your app's internal API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = internal.myModule.myFunction;
+ * ```
+ */
+export declare const internal: FilterApi<
+  typeof fullApi,
+  FunctionReference<any, "internal">
+>;
+
+export declare const components: {
+  staticHosting: import("@convex-dev/static-hosting/_generated/component.js").ComponentApi<"staticHosting">;
+};
