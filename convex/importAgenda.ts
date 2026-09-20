@@ -8,6 +8,7 @@ import { scrapeAgendaThroughComponent } from "./model/firecrawlComponent";
 import { extractionModel, structuredOutput } from "./model/openaiClient";
 import { sliceForDay } from "./model/agendaSlice";
 import { zonedTimeToEpoch } from "./model/zonedTime";
+import { assertConferenceTimezone } from "./model/timezone";
 
 export interface ImportResult {
   readonly conferenceId: Id<"conferences">;
@@ -37,6 +38,8 @@ export const importAgenda = action({
     dayMarker: v.union(v.string(), v.null()),
   },
   handler: async (ctx, args): Promise<ImportResult> => {
+    assertConferenceTimezone(args.timezone);
+
     const openaiKey = requireKey("OPENAI_API_KEY");
 
     const created: { teamId: Id<"teams">; conferenceId: Id<"conferences"> } = await ctx.runMutation(

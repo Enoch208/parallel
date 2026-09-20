@@ -101,9 +101,10 @@ describe("ambiguous session matching", () => {
     expect(hourFromTimeHint("room 5 please")).toBeNull();
   });
 
-  it("throws on a conference timezone the schema never validated", () => {
-    expect(() => matchSessionByTime([sessionAt("s1", "Platform", 0)], "2pm", "Not/AZone")).toThrow(
-      RangeError,
-    );
+  it("returns no match for a legacy conference timezone the schema never validated", () => {
+    expect(matchSessionByTime([sessionAt("s1", "Platform", 0)], "2pm", "Not/AZone")).toBeNull();
+    expect(() =>
+      matchSessionByTime([sessionAt("s1", "Platform", 0)], "2pm", "Not/AZone"),
+    ).not.toThrow();
   });
 });

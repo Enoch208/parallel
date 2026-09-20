@@ -1,4 +1,5 @@
 import type { SessionSummary } from "./types";
+import { isSupportedTimezone } from "./timezone";
 
 const meridiemPattern = /\b(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m?\.?\b/i;
 const twentyFourPattern = /\b([01]?\d|2[0-3]):([0-5]\d)\b/;
@@ -87,7 +88,7 @@ export function matchSessionByTime(
 ): SessionSummary | null {
   const target = hourFromTimeHint(timeHint);
 
-  if (target === null) {
+  if (target === null || !isSupportedTimezone(timezone)) {
     return null;
   }
 

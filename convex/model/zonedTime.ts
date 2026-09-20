@@ -1,3 +1,6 @@
+import { isSupportedTimezone } from "./timezone";
+
+const fallbackTimeZone = "UTC";
 const localPattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::\d{2})?$/;
 
 interface ZonedParts {
@@ -45,7 +48,7 @@ function zonedPartsToUtc(date: Date, timeZone: string): number {
 export function zonedTimeToEpoch(local: string, timeZone: string): number | null {
   const match = localPattern.exec(local);
 
-  if (match === null) {
+  if (match === null || !isSupportedTimezone(timeZone)) {
     return null;
   }
 
@@ -65,9 +68,10 @@ export function zonedTimeToEpoch(local: string, timeZone: string): number | null
 }
 
 export function startOfLocalDay(now: number, timeZone: string): number {
-  const parts = readZonedParts(new Date(now), timeZone);
+  const usable = isSupportedTimezone(timeZone) ? timeZone : fallbackTimeZone;
+  const parts = readZonedParts(new Date(now), usable);
   const midnightGuess = Date.UTC(parts.year, parts.month - 1, parts.day, 0, 0, 0);
-  const offset = zonedPartsToUtc(new Date(midnightGuess), timeZone) - midnightGuess;
+  const offset = zonedPartsToUtc(new Date(midnightGuess), usable) - midnightGuess;
 
   return midnightGuess - offset;
 }

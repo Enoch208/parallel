@@ -16,6 +16,7 @@ import { scrapeAgendaThroughComponent } from "./model/firecrawlComponent";
 import { extractionModel, structuredOutput } from "./model/openaiClient";
 import { sliceForDay } from "./model/agendaSlice";
 import { zonedTimeToEpoch } from "./model/zonedTime";
+import { assertConferenceTimezone } from "./model/timezone";
 import { importWorkflows, scoringPool } from "./model/workpools";
 
 const scoringFinishedEvent = "importScoringFinished";
@@ -323,6 +324,8 @@ export const startImport = mutation({
     ctx,
     args,
   ): Promise<{ workflowId: WorkflowId; conferenceId: Id<"conferences"> }> => {
+    assertConferenceTimezone(args.timezone);
+
     const created: { teamId: Id<"teams">; conferenceId: Id<"conferences"> } = await ctx.runMutation(
       internal.importWrites.createConference,
       {
