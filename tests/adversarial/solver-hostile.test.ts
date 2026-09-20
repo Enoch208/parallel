@@ -67,7 +67,7 @@ describe("an agenda where everything overlaps", () => {
     }
   });
 
-  it("counts time slots the team cannot physically use in the coverage denominator", () => {
+  it("keeps sessions one teammate cannot physically reach out of the coverage denominator", () => {
     const single: OptimizerInput = {
       ...input,
       members: [member("m1", "Ada")],
@@ -78,7 +78,7 @@ describe("an agenda where everything overlaps", () => {
 
     if (outcome.kind === "plan") {
       expect(outcome.coverage.uniqueSessions).toBe(1);
-      expect(outcome.coverage.maxAttendableSessions).toBe(3);
+      expect(outcome.coverage.maxAttendableSessions).toBe(1);
     }
   });
 });

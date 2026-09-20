@@ -1,4 +1,5 @@
 import type { AssignmentSummary, CoverageSummary, GoalCoverage } from "../model/types";
+import { maxAttendableIntervals } from "./attendable";
 import { RELEVANCE_ABSORPTION } from "./constants";
 import type { EngineContext } from "./context";
 import { buildEngineContext } from "./context";
@@ -61,13 +62,7 @@ export function attendeesBySessionIndex(
 }
 
 function maxAttendableSessions(context: EngineContext): number {
-  let total = 0;
-
-  for (const window of context.windows) {
-    total += Math.min(context.members.length, window.length);
-  }
-
-  return total;
+  return maxAttendableIntervals(context.sessions, context.members.length);
 }
 
 export function coverageSummaryFromContext(
