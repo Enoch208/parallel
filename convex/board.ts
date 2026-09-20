@@ -36,6 +36,10 @@ export interface PlanWithAssignments {
   readonly conferenceRevision: number;
   readonly isStale: boolean;
   readonly blockingPins: readonly string[];
+  readonly solverStatus: "optimal" | "heuristic" | null;
+  readonly objective: number | null;
+  readonly upperBound: number | null;
+  readonly nodesExplored: number | null;
   readonly assignments: readonly AssignmentSummary[];
 }
 
@@ -160,6 +164,10 @@ export const latestPlan = query({
     return {
       id: plan._id,
       status: plan.status,
+      solverStatus: plan.solverStatus ?? null,
+      objective: plan.objective ?? null,
+      upperBound: plan.upperBound ?? null,
+      nodesExplored: plan.nodesExplored ?? null,
       computedAt: plan.computedAt,
       computedAtRevision: plan.computedAtRevision,
       conferenceRevision: conference.constraintRevision,

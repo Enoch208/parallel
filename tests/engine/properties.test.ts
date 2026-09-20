@@ -20,10 +20,7 @@ function currentAssignments(input: OptimizerInput): readonly AssignmentSummary[]
   return outcome.kind === "plan" ? outcome.assignments : null;
 }
 
-function survivesBlocks(
-  input: OptimizerInput,
-  assignments: readonly AssignmentSummary[],
-): boolean {
+function survivesBlocks(input: OptimizerInput, assignments: readonly AssignmentSummary[]): boolean {
   return !assignments.some((assignment) =>
     input.blocks.some(
       (entry) =>

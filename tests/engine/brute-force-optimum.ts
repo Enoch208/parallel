@@ -74,6 +74,13 @@ function penalizedScore(
   return base - REPAIR_CHANGE_PENALTY * countMovedAssignments(input.sessions, current, assignments);
 }
 
+export function bruteForceCost(input: OptimizerInput): number {
+  return input.members.reduce(
+    (total, teammate) => total * feasibleSchedules(input, teammate.id).length,
+    1,
+  );
+}
+
 export function bruteForceOptimum(
   input: OptimizerInput,
   current: readonly AssignmentSummary[] | null = null,

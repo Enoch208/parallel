@@ -2,8 +2,10 @@ import { DUPLICATE_ATTENDANCE_PENALTY, INTEREST_BONUS, REPAIR_CHANGE_PENALTY } f
 import { absorptionFactor, teamGoalCoverage, untouchedProducts } from "./coverage";
 import { itemAt } from "./lookup";
 import type { SearchPlan } from "./searchPlan";
-import { buildSearchPlan } from "./searchPlan";
+import { buildSearchPlan, NO_SESSION } from "./searchPlan";
 import type { OptimizerInput } from "./types";
+
+export const EXACT_SEARCH_LOG2_LIMIT = 40;
 
 export interface ObjectiveBounds {
   readonly factorSuffix: readonly (readonly number[])[];
@@ -119,4 +121,25 @@ export function upperBoundForPlan(plan: SearchPlan): number {
 
 export function objectiveUpperBound(input: OptimizerInput): number {
   return upperBoundForPlan(buildSearchPlan(input, null));
+}
+
+export function searchSpaceLog2(plan: SearchPlan): number {
+  let total = 0;
+  plan.context.windows.forEach((windowSessions, windowIndex) => {
+    for (let memberIndex = 0; memberIndex < plan.context.members.length; memberIndex += 1) {
+      if (itemAt(itemAt(plan.forced, memberIndex), windowIndex) !== NO_SESSION) continue;
+      const allowedRow = itemAt(plan.allowed, memberIndex);
+      const open = windowSessions.filter((sessionIndex) => itemAt(allowedRow, sessionIndex)).length;
+      total += Math.log2(open + 1);
+    }
+  });
+  return total;
+}
+
+export function fitsExactSearch(plan: SearchPlan): boolean {
+  return searchSpaceLog2(plan) <= EXACT_SEARCH_LOG2_LIMIT;
+}
+
+export function canSolveExactly(input: OptimizerInput): boolean {
+  return fitsExactSearch(buildSearchPlan(input, null));
 }

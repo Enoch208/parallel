@@ -1,6 +1,6 @@
 import type { AssignmentSummary } from "../model/types";
 import type { ObjectiveBounds } from "./bounds";
-import { buildObjectiveBounds, upperBoundForPlan, upperBoundFrom } from "./bounds";
+import { buildObjectiveBounds, fitsExactSearch, upperBoundForPlan, upperBoundFrom } from "./bounds";
 import { runBeamSearch } from "./beam";
 import { DUPLICATE_ATTENDANCE_PENALTY, INTEREST_BONUS, REPAIR_CHANGE_PENALTY } from "./constants";
 import {
@@ -19,7 +19,6 @@ import { buildSearchPlan, NO_SESSION } from "./searchPlan";
 import type { OptimizerInput, ProvenOutcome } from "./types";
 
 export const EXACT_NODE_BUDGET = 120000;
-export const EXACT_SEARCH_LOG2_LIMIT = 26;
 
 const SCORE_EPSILON = 1e-9;
 
@@ -198,23 +197,6 @@ function assignmentsFromChoices(
   return assignments;
 }
 
-export function searchSpaceLog2(plan: SearchPlan): number {
-  let total = 0;
-  plan.context.windows.forEach((windowSessions, windowIndex) => {
-    for (let memberIndex = 0; memberIndex < plan.context.members.length; memberIndex += 1) {
-      if (itemAt(itemAt(plan.forced, memberIndex), windowIndex) !== NO_SESSION) continue;
-      const allowedRow = itemAt(plan.allowed, memberIndex);
-      const open = windowSessions.filter((sessionIndex) => itemAt(allowedRow, sessionIndex)).length;
-      total += Math.log2(open + 1);
-    }
-  });
-  return total;
-}
-
-export function canSolveExactly(input: OptimizerInput): boolean {
-  return searchSpaceLog2(buildSearchPlan(input, null)) <= EXACT_SEARCH_LOG2_LIMIT;
-}
-
 function outcomeFrom(
   plan: SearchPlan,
   choices: readonly (readonly number[])[],
@@ -257,7 +239,7 @@ function solveWithProof(
   }
   const plan = buildSearchPlan(input, current);
   const beam = beamChoices(plan);
-  if (searchSpaceLog2(plan) > EXACT_SEARCH_LOG2_LIMIT) {
+  if (!fitsExactSearch(plan)) {
     return outcomeFrom(plan, beam.choices, beam.changes, {
       status: "heuristic",
       nodesExplored: 0,

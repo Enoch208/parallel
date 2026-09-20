@@ -64,10 +64,24 @@ cost estimate, which the team lead enters and which is captioned as their own fi
 | Scheduler and crons          | `convex/crons.ts`                        | Takeaway prompts become due when a session ends                                               |
 | Guest workspaces             | `convex/guest.ts`                        | Your clicks never change another visitor's board                                              |
 
+## What the solver actually proves
+
+Two modes, and the product says which one it used. On a small enough instance a branch-and-bound
+search explores the whole space and reports **proven optimal**. On a larger one it reports the best
+plan it found together with a mathematically derived upper bound, so the most it could be wrong by
+is stated rather than hidden.
+
+The engine is verified by randomized property testing rather than a handful of fixtures: **2,000
+generated instances** with zero violations of the hard constraints, **438 exact-versus-brute-force
+comparisons** with zero disagreements, and determinism checked over 400 instances run twice. The
+tests also found that beam search alone is genuinely suboptimal on a measurable share of instances,
+which is why the exact mode exists.
+
 ## Known issues
 
-- Beam search is checked against brute force on small inputs only. On a large agenda it is a
-  heuristic and no optimality proof is claimed.
+- On a large agenda the solver runs out of search budget and reports "best found, not proven
+  optimal" with the size of the gap, rather than claiming an optimum it has not proved. The demo
+  agenda is just past that threshold.
 - The optimizer will leave a teammate free rather than create duplicate attendance that adds no
   coverage. The lane says so, and anyone can take a session from it by hand.
 - A send accepted by the email provider whose response never reaches us would be retried, so

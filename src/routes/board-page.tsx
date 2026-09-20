@@ -237,6 +237,9 @@ export function BoardPage() {
       <BoardView
         lanes={lanes}
         coverage={coverage ?? null}
+        solverStatus={plan === null ? null : plan.solverStatus}
+        objective={plan === null ? null : plan.objective}
+        upperBound={plan === null ? null : plan.upperBound}
         timezone={overview.conference.timezone}
         staleReason={
           plan !== null && plan.isStale

@@ -2,7 +2,12 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
-import { computeCoverageSummary, countMovedAssignments, optimizePlan, repairPlan } from "./engine";
+import {
+  computeCoverageSummary,
+  countMovedAssignments,
+  optimizePlanWithProof,
+  repairPlan,
+} from "./engine";
 import { loadOptimizerInput } from "./model/loadOptimizerInput";
 import { naturalAssignments } from "./model/naturalPlan";
 import type { AssignmentSummary } from "./model/types";
@@ -17,7 +22,7 @@ export const optimize = mutation({
     }
 
     const input = await loadOptimizerInput(ctx, args.conferenceId, conference.agendaUrl);
-    const outcome = optimizePlan(input);
+    const outcome = optimizePlanWithProof(input);
 
     const planId = await ctx.db.insert("plans", {
       conferenceId: args.conferenceId,
@@ -28,6 +33,14 @@ export const optimize = mutation({
           ? outcome.blockingPinnedSessionIds.map((id) => id as Id<"sessions">)
           : [],
       computedAt: Date.now(),
+      ...(outcome.kind === "plan"
+        ? {
+            solverStatus: outcome.status,
+            objective: outcome.objective.objective,
+            upperBound: outcome.upperBound,
+            nodesExplored: outcome.nodesExplored,
+          }
+        : {}),
     });
 
     if (outcome.kind === "plan") {

@@ -5,15 +5,9 @@ export {
   RELEVANCE_ABSORPTION,
   REPAIR_CHANGE_PENALTY,
 } from "./constants";
-export { objectiveUpperBound } from "./bounds";
+export { canSolveExactly, EXACT_SEARCH_LOG2_LIMIT, objectiveUpperBound } from "./bounds";
 export { computeCoverageSummary } from "./coverage";
-export {
-  canSolveExactly,
-  EXACT_NODE_BUDGET,
-  EXACT_SEARCH_LOG2_LIMIT,
-  optimizePlanWithProof,
-  repairPlanWithProof,
-} from "./exact";
+export { EXACT_NODE_BUDGET, optimizePlanWithProof, repairPlanWithProof } from "./exact";
 export { blockingPinnedSessionIds, findPinConflicts } from "./feasibility";
 export { groupSessionIndicesByWindow, overlaps, sortedSessions } from "./intervals";
 export { scoreAssignments } from "./objective";

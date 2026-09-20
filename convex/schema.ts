@@ -103,6 +103,10 @@ export default defineSchema({
     ),
     blockingPins: v.array(v.id("sessions")),
     computedAt: v.number(),
+    solverStatus: v.optional(v.union(v.literal("optimal"), v.literal("heuristic"))),
+    objective: v.optional(v.number()),
+    upperBound: v.optional(v.number()),
+    nodesExplored: v.optional(v.number()),
   })
     .index("by_conference", ["conferenceId"])
     .index("by_conference_computed", ["conferenceId", "computedAt"]),

@@ -2,6 +2,7 @@ import type { CoverageSummary, SessionSummary } from "@convex/model/types";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ShuffleIcon } from "@hugeicons/core-free-icons";
 import { BoardCounters } from "./board-counters";
+import { SolverNote } from "./solver-note";
 import { LaneColumn, type LaneCard } from "./lane-column";
 import { StaleBanner } from "./stale-banner";
 
@@ -16,6 +17,9 @@ export interface BoardLane {
 export function BoardView({
   lanes,
   coverage,
+  solverStatus,
+  objective,
+  upperBound,
   timezone,
   staleReason,
   optimizing,
@@ -27,6 +31,9 @@ export function BoardView({
 }: {
   lanes: readonly BoardLane[];
   coverage: CoverageSummary | null;
+  solverStatus: "optimal" | "heuristic" | null;
+  objective: number | null;
+  upperBound: number | null;
   timezone: string;
   staleReason: string | null;
   optimizing: boolean;
@@ -39,6 +46,8 @@ export function BoardView({
   return (
     <div className="flex flex-col gap-6">
       <BoardCounters coverage={coverage} />
+
+      <SolverNote solverStatus={solverStatus} objective={objective} upperBound={upperBound} />
 
       {staleReason !== null && (
         <StaleBanner reason={staleReason} onRepair={onRepair} repairing={repairing} />
