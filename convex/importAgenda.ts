@@ -5,9 +5,8 @@ import type { Id } from "./_generated/dataModel";
 import { agendaExtractionSchema, agendaSystemPrompt, parseExtraction } from "./model/agendaSchema";
 import { contentHash, scrapeAgenda } from "./model/firecrawlClient";
 import { extractionModel, structuredOutput } from "./model/openaiClient";
+import { sliceForDay } from "./model/agendaSlice";
 import { zonedTimeToEpoch } from "./model/zonedTime";
-
-const markdownBudget = 16000;
 
 export interface ImportResult {
   readonly conferenceId: Id<"conferences">;
@@ -26,15 +25,6 @@ function requireKey(name: string): string {
   }
 
   return value;
-}
-
-function sliceForDay(markdown: string, dayMarker: string | null): string {
-  if (dayMarker === null) {
-    return markdown.slice(0, markdownBudget);
-  }
-
-  const start = markdown.indexOf(dayMarker);
-  return markdown.slice(start === -1 ? 0 : start, (start === -1 ? 0 : start) + markdownBudget);
 }
 
 export const importAgenda = action({

@@ -75,3 +75,15 @@ export interface InfeasibleOutcome {
 }
 
 export type OptimizeOutcome = PlanOutcome | InfeasibleOutcome;
+
+export const solutionStatus = ["optimal", "heuristic"] as const;
+export type SolutionStatus = (typeof solutionStatus)[number];
+
+export interface ProvenPlanOutcome extends PlanOutcome {
+  readonly status: SolutionStatus;
+  readonly upperBound: number;
+  readonly gap: number;
+  readonly nodesExplored: number;
+}
+
+export type ProvenOutcome = ProvenPlanOutcome | InfeasibleOutcome;

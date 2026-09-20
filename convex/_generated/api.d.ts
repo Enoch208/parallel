@@ -9,6 +9,7 @@
  */
 
 import type * as activity from "../activity.js";
+import type * as agendaWatch from "../agendaWatch.js";
 import type * as assignments from "../assignments.js";
 import type * as board from "../board.js";
 import type * as brief from "../brief.js";
@@ -22,9 +23,11 @@ import type * as emailSend from "../emailSend.js";
 import type * as emailSendWrites from "../emailSendWrites.js";
 import type * as emailThreads from "../emailThreads.js";
 import type * as engine_beam from "../engine/beam.js";
+import type * as engine_bounds from "../engine/bounds.js";
 import type * as engine_constants from "../engine/constants.js";
 import type * as engine_context from "../engine/context.js";
 import type * as engine_coverage from "../engine/coverage.js";
+import type * as engine_exact from "../engine/exact.js";
 import type * as engine_feasibility from "../engine/feasibility.js";
 import type * as engine_index from "../engine/index.js";
 import type * as engine_intervals from "../engine/intervals.js";
@@ -35,12 +38,15 @@ import type * as engine_planDiff from "../engine/planDiff.js";
 import type * as engine_reasons from "../engine/reasons.js";
 import type * as engine_searchPlan from "../engine/searchPlan.js";
 import type * as engine_types from "../engine/types.js";
+import type * as evidence from "../evidence.js";
 import type * as guest from "../guest.js";
 import type * as http from "../http.js";
 import type * as importAgenda from "../importAgenda.js";
 import type * as importWrites from "../importWrites.js";
 import type * as judges from "../judges.js";
+import type * as model_agendaDiff from "../model/agendaDiff.js";
 import type * as model_agendaSchema from "../model/agendaSchema.js";
+import type * as model_agendaSlice from "../model/agendaSlice.js";
 import type * as model_agentmailClient from "../model/agentmailClient.js";
 import type * as model_briefSchema from "../model/briefSchema.js";
 import type * as model_coverRanking from "../model/coverRanking.js";
@@ -72,6 +78,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   activity: typeof activity;
+  agendaWatch: typeof agendaWatch;
   assignments: typeof assignments;
   board: typeof board;
   brief: typeof brief;
@@ -85,9 +92,11 @@ declare const fullApi: ApiFromModules<{
   emailSendWrites: typeof emailSendWrites;
   emailThreads: typeof emailThreads;
   "engine/beam": typeof engine_beam;
+  "engine/bounds": typeof engine_bounds;
   "engine/constants": typeof engine_constants;
   "engine/context": typeof engine_context;
   "engine/coverage": typeof engine_coverage;
+  "engine/exact": typeof engine_exact;
   "engine/feasibility": typeof engine_feasibility;
   "engine/index": typeof engine_index;
   "engine/intervals": typeof engine_intervals;
@@ -98,12 +107,15 @@ declare const fullApi: ApiFromModules<{
   "engine/reasons": typeof engine_reasons;
   "engine/searchPlan": typeof engine_searchPlan;
   "engine/types": typeof engine_types;
+  evidence: typeof evidence;
   guest: typeof guest;
   http: typeof http;
   importAgenda: typeof importAgenda;
   importWrites: typeof importWrites;
   judges: typeof judges;
+  "model/agendaDiff": typeof model_agendaDiff;
   "model/agendaSchema": typeof model_agendaSchema;
+  "model/agendaSlice": typeof model_agendaSlice;
   "model/agentmailClient": typeof model_agentmailClient;
   "model/briefSchema": typeof model_briefSchema;
   "model/coverRanking": typeof model_coverRanking;

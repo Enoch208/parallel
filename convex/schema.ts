@@ -25,6 +25,7 @@ export default defineSchema({
     timezone: v.string(),
     constraintRevision: v.number(),
     isDemoData: v.boolean(),
+    dayMarker: v.optional(v.union(v.string(), v.null())),
   }).index("by_team", ["teamId"]),
 
   sources: defineTable({

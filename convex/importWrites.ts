@@ -9,6 +9,7 @@ export const createConference = internalMutation({
     name: v.string(),
     agendaUrl: v.string(),
     timezone: v.string(),
+    dayMarker: v.optional(v.union(v.string(), v.null())),
   },
   handler: async (ctx, args) => {
     const teamId = await ctx.db.insert("teams", { name: args.teamName, isDemo: false });
@@ -20,6 +21,7 @@ export const createConference = internalMutation({
       timezone: args.timezone,
       constraintRevision: 0,
       isDemoData: false,
+      dayMarker: args.dayMarker === undefined ? null : args.dayMarker,
     });
 
     return { teamId, conferenceId };
