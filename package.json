@@ -1,0 +1,56 @@
+{
+  "name": "parallel",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "deploy": "npx @convex-dev/static-hosting deploy"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "5.3.0",
+    "@fontsource-variable/geist-mono": "5.3.0",
+    "@fontsource-variable/manrope": "5.3.0",
+    "@hugeicons/core-free-icons": "4.3.4",
+    "@hugeicons/react": "1.1.10",
+    "convex": "1.46.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-router": "8.4.0"
+  },
+  "devDependencies": {
+    "@convex-dev/static-hosting": "0.2.1",
+    "@eslint/js": "10.0.1",
+    "@tailwindcss/vite": "4.3.3",
+    "@types/node": "26.6.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "eslint": "10.11.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.12.0",
+    "prettier": "3.9.8",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.70.0",
+    "vite": "8.3.0",
+    "vitest": "5.0.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}
