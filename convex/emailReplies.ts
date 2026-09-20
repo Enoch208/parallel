@@ -11,6 +11,11 @@ import {
 } from "./model/replySchema";
 import { matchSessionByTime, matchSessionByTitle } from "./model/sessionMatch";
 import { bumpConstraintRevision } from "./constraints";
+import {
+  applyCoverAcceptance,
+  declineCoverRequest,
+  openCoverRequestsFor,
+} from "./model/coverAcceptance";
 
 export const pendingReplies = query({
   args: { conferenceId: v.id("conferences") },
@@ -87,56 +92,40 @@ export const resolveCoverReply = internalMutation({
       quote: args.quote,
     });
 
-    const conferenceId = event.conferenceId;
-    const membershipId = event.membershipId;
+    const open = await openCoverRequestsFor(ctx, event.conferenceId, event.membershipId);
 
-    const open = await ctx.db
-      .query("coverRequests")
-      .withIndex("by_conference_status", (q) =>
-        q.eq("conferenceId", conferenceId).eq("status", "asked"),
-      )
-      .collect();
+    if (open.length === 0) {
+      return { handled: false, reason: "no_open_request" as const };
+    }
 
-    const mine = open.find((request) => request.toMember === membershipId);
+    if (open.length > 1) {
+      return { handled: false, reason: "ambiguous_request" as const };
+    }
+
+    const mine = open.at(0);
 
     if (mine === undefined) {
       return { handled: false, reason: "no_open_request" as const };
     }
 
     if (!args.accept) {
-      await ctx.db.patch(mine._id, { status: "declined" });
+      const declined = await declineCoverRequest(ctx, mine._id);
+
+      if (!declined.declined) {
+        return { handled: false, reason: "no_open_request" as const };
+      }
+
       await ctx.db.patch(args.eventId, { handled: true });
       return { handled: true, reason: "declined" as const, requestId: mine._id };
     }
 
-    const session = await ctx.db.get(mine.sessionId);
-    const member = await ctx.db.get(membershipId);
+    const outcome = await applyCoverAcceptance(ctx, mine._id, null, "email");
 
-    if (session === null || member === null) {
-      return { handled: false, reason: "missing_records" as const };
+    if (!outcome.accepted) {
+      return { handled: false, reason: outcome.reason, detail: outcome.detail };
     }
 
-    await ctx.db.insert("assignments", {
-      planId: mine.planId,
-      conferenceId,
-      sessionId: mine.sessionId,
-      membershipId,
-      pinned: false,
-      reason: `Covering after a teammate dropped out, +${mine.coverageGain.toFixed(1)} Team Goal Coverage`,
-    });
-
-    await ctx.db.patch(mine._id, { status: "accepted" });
     await ctx.db.patch(args.eventId, { handled: true });
-    await bumpConstraintRevision(ctx, conferenceId);
-
-    await ctx.db.insert("activity", {
-      conferenceId,
-      kind: "cover_accepted",
-      sponsor: "agentmail",
-      durationMs: 0,
-      summary: `${member.displayName} replied YES and now covers "${session.title}". 1 person moved.`,
-    });
-
     return { handled: true, reason: "accepted" as const, requestId: mine._id };
   },
 });

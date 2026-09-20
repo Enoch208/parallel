@@ -11,6 +11,10 @@ export default defineConfig({
       "@convex": fileURLToPath(new URL("./convex", import.meta.url)),
     },
   },
+  test: {
+    environmentMatchGlobs: [["tests/convex/**", "edge-runtime"]],
+    server: { deps: { inline: ["convex-test"] } },
+  },
   build: {
     outDir: "dist",
     assetsInlineLimit: 0,

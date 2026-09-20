@@ -1,42 +1,11 @@
 import { v } from "convex/values";
 import { mutation } from "./_generated/server";
-import type { MutationCtx } from "./_generated/server";
-import type { Doc, Id } from "./_generated/dataModel";
-import { overlaps } from "./engine";
-
-export class StalePlanError extends Error {}
-
-async function requireCurrentPlan(
-  ctx: MutationCtx,
-  planId: Id<"plans">,
-  expectedRevision: number,
-): Promise<{ plan: Doc<"plans">; conference: Doc<"conferences"> }> {
-  const plan = await ctx.db.get(planId);
-
-  if (plan === null) {
-    throw new Error("That plan no longer exists");
-  }
-
-  const conference = await ctx.db.get(plan.conferenceId);
-
-  if (conference === null) {
-    throw new Error("Conference not found");
-  }
-
-  if (conference.constraintRevision !== expectedRevision) {
-    throw new StalePlanError(
-      "The plan changed while you were looking at it. Reload the board and try again.",
-    );
-  }
-
-  if (plan.computedAtRevision !== conference.constraintRevision) {
-    throw new StalePlanError(
-      "This plan is out of date with the team's constraints. Repair it before changing assignments.",
-    );
-  }
-
-  return { plan, conference };
-}
+import {
+  assertNoOverlap,
+  assertNotBlocked,
+  requireCurrentPlan,
+  requireSession,
+} from "./model/assignmentGuards";
 
 export const claim = mutation({
   args: {
@@ -47,29 +16,14 @@ export const claim = mutation({
   },
   handler: async (ctx, args) => {
     const { plan } = await requireCurrentPlan(ctx, args.planId, args.expectedRevision);
-    const session = await ctx.db.get(args.sessionId);
+    const session = await requireSession(ctx, args.sessionId);
 
-    if (session === null) {
-      throw new Error("Session not found");
-    }
+    await assertNotBlocked(ctx, plan.conferenceId, args.membershipId, session);
 
-    const existing = await ctx.db
-      .query("assignments")
-      .withIndex("by_plan_member", (q) =>
-        q.eq("planId", args.planId).eq("membershipId", args.membershipId),
-      )
-      .collect();
+    const { alreadyAssigned } = await assertNoOverlap(ctx, args.planId, args.membershipId, session);
 
-    if (existing.some((assignment) => assignment.sessionId === args.sessionId)) {
+    if (alreadyAssigned) {
       return { claimed: false, reason: "already_assigned" as const };
-    }
-
-    for (const assignment of existing) {
-      const other = await ctx.db.get(assignment.sessionId);
-
-      if (other !== null && overlaps(other, session)) {
-        throw new Error(`That clashes with "${other.title}" at the same time`);
-      }
     }
 
     await ctx.db.insert("assignments", {
