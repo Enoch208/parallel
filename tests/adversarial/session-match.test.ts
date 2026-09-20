@@ -52,11 +52,11 @@ describe("ambiguous session matching", () => {
     }
   });
 
-  it("does not read a 24 hour clock, which is the wording the plan email itself suggests", () => {
+  it("reads a 24 hour clock, which is the wording the plan email itself suggests", () => {
     const sessions = [sessionAt("s1", "Platform", 0)];
 
-    expect(hourFromTimeHint("14:00")).toBeNull();
-    expect(matchSessionByTime(sessions, "I cannot make the 14:00", pacific)).toBeNull();
+    expect(hourFromTimeHint("14:00")).toEqual({ hour: 14, minute: 0 });
+    expect(matchSessionByTime(sessions, "I cannot make the 14:00", pacific)?.id).toBe("s1");
     expect(matchSessionByTime(sessions, "2pm", pacific)?.id).toBe("s1");
   });
 

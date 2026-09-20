@@ -36,3 +36,27 @@ describe("sliceForDay", () => {
     expect(sliceForDay(agenda, null)).toBe(agenda);
   });
 });
+
+describe("twenty-four hour time hints", () => {
+  it("reads the wording the plan email actually suggests", async () => {
+    const { hourFromTimeHint } = await import("../../convex/model/sessionMatch");
+    expect(hourFromTimeHint("I cannot make the 14:00")).toEqual({ hour: 14, minute: 0 });
+    expect(hourFromTimeHint("cant do 09:30 sorry")).toEqual({ hour: 9, minute: 30 });
+  });
+
+  it("still reads am and pm", async () => {
+    const { hourFromTimeHint } = await import("../../convex/model/sessionMatch");
+    expect(hourFromTimeHint("can't make the 2pm")).toEqual({ hour: 14, minute: 0 });
+  });
+
+  it("refuses an impossible twenty-four hour clock", async () => {
+    const { hourFromTimeHint } = await import("../../convex/model/sessionMatch");
+    expect(hourFromTimeHint("meet at 26:00")).toBeNull();
+    expect(hourFromTimeHint("room 15:99")).toBeNull();
+  });
+
+  it("does not read a plain number as a time", async () => {
+    const { hourFromTimeHint } = await import("../../convex/model/sessionMatch");
+    expect(hourFromTimeHint("the 3 amazing talks")).toBeNull();
+  });
+});

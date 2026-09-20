@@ -53,8 +53,12 @@ export function parseReply(payload: unknown, body: string): ParsedReply {
   const rawConfidence = typeof row.confidence === "number" ? row.confidence : 0;
   const confidence = Math.min(1, Math.max(0, rawConfidence));
   const quote = typeof row.quote === "string" && row.quote.length > 0 ? row.quote : null;
+  const normalizedQuote = quote === null ? "" : normalizeForQuoteCheck(quote);
+  const substantial =
+    normalizedQuote.length >= minimumQuoteCharacters &&
+    normalizedQuote.split(" ").filter((word) => word.length > 0).length >= minimumQuoteWords;
   const quoteVerified =
-    quote !== null && normalizeForQuoteCheck(body).includes(normalizeForQuoteCheck(quote));
+    quote !== null && substantial && normalizeForQuoteCheck(body).includes(normalizedQuote);
 
   return {
     intent,
@@ -67,6 +71,8 @@ export function parseReply(payload: unknown, body: string): ParsedReply {
 }
 
 export const applyThreshold = 0.75;
+export const minimumQuoteWords = 3;
+export const minimumQuoteCharacters = 12;
 
 export function shouldApplyAutomatically(parsed: ParsedReply): boolean {
   return parsed.confidence >= applyThreshold && parsed.quoteVerified;

@@ -7,7 +7,13 @@ export function tokenFromSubject(subject: string): string | null {
     return null;
   }
 
-  return subject.toUpperCase().replace(/^.*\[PL-([A-Z0-9]{4,8})\].*$/, "$1");
+  const whole = match.at(0);
+
+  if (whole === undefined) {
+    return null;
+  }
+
+  return whole.slice("[PL-".length, whole.length - 1);
 }
 
 export function normalizeAddress(address: string): string {

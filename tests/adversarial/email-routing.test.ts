@@ -59,15 +59,14 @@ describe("hostile subject tokens", () => {
     expect(tokenFromSubject("re: your parallel plan [pl-ab2c]")).toBe("AB2C");
   });
 
-  it("returns the whole subject instead of a token when the subject contains a newline", () => {
+  it("reads the token even when the subject contains a newline", () => {
     const folded = `${adaSubject}\nSent from my phone`;
 
-    expect(tokenFromSubject(folded)).toBe(folded.toUpperCase());
-    expect(tokenFromSubject(folded)).not.toBe(adaToken);
+    expect(tokenFromSubject(folded)).toBe(adaToken);
   });
 
-  it("takes the last token when a forwarded subject carries two, not the one the matcher found", () => {
-    expect(tokenFromSubject("Re: [PL-AB2C] fwd [PL-XY9Z]")).toBe("XY9Z");
+  it("takes the first token when a forwarded subject carries two, matching what the detector found", () => {
+    expect(tokenFromSubject("Re: [PL-AB2C] fwd [PL-XY9Z]")).toBe("AB2C");
   });
 
   it("mints tokens only from the unambiguous alphabet and never repeats one across the seeds a deployment uses", () => {
@@ -150,9 +149,62 @@ describe("the verbatim quote guard", () => {
     expect(() => parseReply("yes", body)).toThrow();
   });
 
-  it("accepts a one character quote as verbatim evidence, so the guard is a substring check and not a sentence check", () => {
-    expect(parsed("I", 1)).toBe(true);
-    expect(parsed("a", 1)).toBe(true);
-    expect(parsed(".", 1)).toBe(true);
+  it("refuses a one character quote, so the guard is a sentence check and not a substring check", () => {
+    expect(parsed("I", 1)).toBe(false);
+    expect(parsed("a", 1)).toBe(false);
+    expect(parsed(".", 1)).toBe(false);
+  });
+});
+
+describe("token extraction survives real mail clients", () => {
+  it("reads the token when the subject carries a newline", async () => {
+    const { tokenFromSubject } = await import("../../convex/model/threadRouting");
+    expect(tokenFromSubject("Your Parallel plan [PL-AB2C]\nSent from my phone")).toBe("AB2C");
+  });
+
+  it("reads the token the matcher found when a subject carries two", async () => {
+    const { tokenFromSubject } = await import("../../convex/model/threadRouting");
+    expect(tokenFromSubject("Re: [PL-AB2C] fwd [PL-XY9Z]")).toBe("AB2C");
+  });
+
+  it("reads a token wrapped in folded whitespace", async () => {
+    const { tokenFromSubject } = await import("../../convex/model/threadRouting");
+    expect(tokenFromSubject("Re: Your plan\r\n\t[PL-9F4T] today")).toBe("9F4T");
+  });
+});
+
+describe("the quote guard demands a real sentence", () => {
+  const body = "Hi - can't make the 2pm, customer lunch ran over. Sorry!";
+
+  it("refuses a single character that happens to appear in the body", async () => {
+    const { parseReply, shouldApplyAutomatically } = await import("../../convex/model/replySchema");
+
+    for (const quote of ["I", "a", ".", "the"]) {
+      const parsed = parseReply(
+        { intent: "cant_attend", sessionHint: null, timeHint: "2pm", confidence: 1, quote },
+        body,
+      );
+
+      expect(parsed.quoteVerified).toBe(false);
+      expect(shouldApplyAutomatically(parsed)).toBe(false);
+    }
+  });
+
+  it("still accepts the real sentence the teammate wrote", async () => {
+    const { parseReply, shouldApplyAutomatically } = await import("../../convex/model/replySchema");
+
+    const parsed = parseReply(
+      {
+        intent: "cant_attend",
+        sessionHint: null,
+        timeHint: "2pm",
+        confidence: 0.98,
+        quote: "can't make the 2pm, customer lunch ran over.",
+      },
+      body,
+    );
+
+    expect(parsed.quoteVerified).toBe(true);
+    expect(shouldApplyAutomatically(parsed)).toBe(true);
   });
 });

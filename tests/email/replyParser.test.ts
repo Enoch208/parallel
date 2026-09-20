@@ -58,7 +58,13 @@ describe("parseReply", () => {
 
   it("never applies a low confidence reply even with a real quote", () => {
     const parsed = parseReply(
-      { intent: "other", sessionHint: null, timeHint: null, confidence: 0.46, quote: "Sorry!" },
+      {
+        intent: "other",
+        sessionHint: null,
+        timeHint: null,
+        confidence: 0.46,
+        quote: "customer lunch ran over.",
+      },
       body,
     );
 

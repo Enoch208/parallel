@@ -1,12 +1,13 @@
 import type { SessionSummary } from "./types";
 
-const clockPattern = /\b(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m?\.?\b/i;
+const meridiemPattern = /\b(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m?\.?\b/i;
+const twentyFourPattern = /\b([01]?\d|2[0-3]):([0-5]\d)\b/;
 
 export function hourFromTimeHint(hint: string): { hour: number; minute: number } | null {
-  const matched = clockPattern.exec(hint);
+  const matched = meridiemPattern.exec(hint);
 
   if (matched === null) {
-    return null;
+    return twentyFourHourHint(hint);
   }
 
   const whole = matched.at(0);
@@ -27,6 +28,29 @@ export function hourFromTimeHint(hint: string): { hour: number; minute: number }
   const normalizedHour = isAfternoon ? (hour === 12 ? 12 : hour + 12) : hour === 12 ? 0 : hour;
 
   return { hour: normalizedHour, minute };
+}
+
+function twentyFourHourHint(hint: string): { hour: number; minute: number } | null {
+  const matched = twentyFourPattern.exec(hint);
+
+  if (matched === null) {
+    return null;
+  }
+
+  const whole = matched.at(0);
+
+  if (whole === undefined) {
+    return null;
+  }
+
+  const hour = Number(whole.replace(/^(\d{1,2}):.*$/, "$1"));
+  const minute = Number(whole.replace(/^\d{1,2}:(\d{2}).*$/, "$1"));
+
+  if (!Number.isInteger(hour) || !Number.isInteger(minute)) {
+    return null;
+  }
+
+  return { hour, minute };
 }
 
 function localHourMinute(epoch: number, timezone: string): { hour: number; minute: number } {
