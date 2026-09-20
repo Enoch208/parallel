@@ -94,7 +94,7 @@ describe("agenda diff under extraction noise", () => {
     expect(diff.unchanged).toBe(3);
   });
 
-  it("reports a phantom cancellation when an organizer rewords a title by one word", () => {
+  it("reads a one word reword in the same room and slot as a rename, not a cancellation", () => {
     const reworded = [
       entry("Scaling Postgres at scale", 0),
       entry("Vector search 101", 60),
@@ -102,20 +102,126 @@ describe("agenda diff under extraction noise", () => {
     ];
     const diff = diffAgenda(published, reworded);
 
-    expect(diff.changes.map((change) => change.kind)).toEqual(["cancelled", "added"]);
-    expect(movedOrCancelled(diff)).toHaveLength(1);
+    expect(diff.changes.map((change) => change.kind)).toEqual(["renamed"]);
+    expect(diff.changes.at(0)?.title).toBe("Scaling Postgres at scale");
+    expect(diff.changes.at(0)?.detail).toContain("Scaling Postgres");
+    expect(movedOrCancelled(diff)).toEqual([]);
+    expect(diff.unchanged).toBe(2);
   });
 
-  it("loses a session when two on the same day share a title, and pairs the survivors wrongly", () => {
+  it("does not replace an unrelated session in the same slot with a rename", () => {
+    const replaced = [
+      entry("Rust for embedded radios", 0),
+      entry("Vector search 101", 60),
+      entry("Keynote: the road ahead", 120),
+    ];
+    const diff = diffAgenda(published, replaced);
+
+    expect(diff.changes.map((change) => change.kind)).toEqual(["cancelled", "added"]);
+    expect(movedOrCancelled(diff).map((change) => change.title)).toEqual(["Scaling Postgres"]);
+  });
+
+  it("keeps both sessions when two on the same day share a title and only one survives", () => {
     const withTwoBreaks = [entry("Lunch", 180, null), entry("Lunch", 720, "Hall B")];
     const onlyTheFirst = [entry("Lunch", 180, null)];
     const diff = diffAgenda(withTwoBreaks, onlyTheFirst);
 
-    expect(diff.changes.map((change) => change.kind)).toEqual(["moved"]);
-    expect(diff.changes.map((change) => change.kind)).not.toContain("cancelled");
+    expect(diff.changes.map((change) => change.kind)).toEqual(["cancelled"]);
+    expect(diff.changes.map((change) => change.kind)).not.toContain("moved");
     expect(diff.changes.at(0)?.previousStartsAt).toBe(base + 720 * MINUTE);
-    expect(diff.changes.at(0)?.nextStartsAt).toBe(base + 180 * MINUTE);
+    expect(diff.changes.at(0)?.nextStartsAt).toBeNull();
+    expect(diff.unchanged).toBe(1);
+  });
+
+  it("refuses to guess which of two same titled sessions the survivor is", () => {
+    const twoLunches = [entry("Lunch", 180, "Hall A"), entry("Lunch", 720, "Hall B")];
+    const oneElsewhere = [entry("Lunch", 400, "Hall C")];
+    const diff = diffAgenda(twoLunches, oneElsewhere);
+
+    expect(diff.changes.map((change) => change.kind)).toEqual([
+      "ambiguous",
+      "ambiguous",
+      "ambiguous",
+    ]);
+    expect(diff.changes.map((change) => change.kind)).not.toContain("moved");
+    expect(diff.changes.at(0)?.detail).toContain("could be this one");
     expect(diff.unchanged).toBe(0);
+    expect(movedOrCancelled(diff)).toHaveLength(3);
+    expect(diffAgenda([...twoLunches].reverse(), oneElsewhere)).toEqual(diff);
+  });
+
+  it("separates several generic titles in one pass without crossing any of them", () => {
+    const before = [
+      entry("Keynote", 0, "Main hall"),
+      entry("Coffee Break", 90, "Foyer"),
+      entry("Lunch", 240, "Hall A"),
+      entry("Lunch", 300, "Hall A"),
+      entry("Coffee Break", 420, "Foyer"),
+    ];
+    const after = [
+      entry("Coffee Break", 420, "Foyer"),
+      entry("Lunch", 300, "Hall A"),
+      entry("Keynote", 0, "Main hall"),
+      entry("Lunch", 240, "Hall A"),
+      entry("Coffee Break", 90, "Foyer"),
+    ];
+    const diff = diffAgenda(before, after);
+
+    expect(diff.changes).toEqual([]);
+    expect(diff.unchanged).toBe(5);
+  });
+
+  it("moves only the coffee break that actually moved when two share the title", () => {
+    const before = [
+      entry("Coffee Break", 90, "Foyer"),
+      entry("Coffee Break", 420, "Foyer"),
+      entry("Lunch", 240, "Hall A"),
+      entry("Lunch", 300, "Hall A"),
+      entry("Keynote", 0, "Main hall"),
+    ];
+    const after = [
+      entry("Coffee Break", 90, "Foyer"),
+      entry("Coffee Break", 450, "Foyer"),
+      entry("Lunch", 240, "Hall A"),
+      entry("Lunch", 300, "Hall A"),
+      entry("Keynote", 0, "Main hall"),
+    ];
+    const diff = diffAgenda(before, after);
+
+    expect(diff.changes.map((change) => [change.kind, change.previousStartsAt])).toEqual([
+      ["moved", base + 420 * MINUTE],
+    ]);
+    expect(diff.changes.at(0)?.nextStartsAt).toBe(base + 450 * MINUTE);
+    expect(diff.unchanged).toBe(4);
+  });
+
+  it("produces the same answer when both pages are read back to front", () => {
+    const before = [
+      entry("Keynote", 0, "Main hall"),
+      entry("Coffee Break", 90, "Foyer"),
+      entry("Lunch", 240, "Hall A"),
+      entry("Lunch", 300, "Hall B"),
+      entry("Scaling Postgres", 360, "Hall A"),
+      entry("Coffee Break", 420, "Foyer"),
+    ];
+    const after = [
+      entry("Keynote", 0, "Main hall"),
+      entry("Coffee Break", 90, "Foyer"),
+      entry("Lunch", 240, "Hall A"),
+      entry("Scaling Postgres at scale", 360, "Hall A"),
+      entry("Coffee Break", 480, "Foyer"),
+      entry("Closing panel", 540, "Main hall"),
+    ];
+    const forward = diffAgenda(before, after);
+    const backward = diffAgenda([...before].reverse(), [...after].reverse());
+
+    expect(backward).toEqual(forward);
+    expect(forward.changes.map((change) => change.kind)).toEqual([
+      "cancelled",
+      "renamed",
+      "moved",
+      "added",
+    ]);
   });
 
   it("reports an empty agenda as every session cancelled, never as no change", () => {
