@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as activity from "../activity.js";
 import type * as assignments from "../assignments.js";
 import type * as board from "../board.js";
 import type * as constraints from "../constraints.js";
@@ -60,6 +61,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  activity: typeof activity;
   assignments: typeof assignments;
   board: typeof board;
   constraints: typeof constraints;

@@ -175,6 +175,27 @@ export default defineSchema({
     .index("by_conference", ["conferenceId"])
     .index("by_session", ["sessionId"]),
 
+  briefs: defineTable({
+    conferenceId: v.id("conferences"),
+    body: v.string(),
+    model: v.string(),
+    recipients: v.array(v.string()),
+    tripCostEstimate: v.union(v.number(), v.null()),
+    sentAt: v.union(v.number(), v.null()),
+  }).index("by_conference", ["conferenceId"]),
+
+  outboundSends: defineTable({
+    conferenceId: v.id("conferences"),
+    membershipId: v.union(v.id("memberships"), v.null()),
+    kind: v.string(),
+    planRevision: v.number(),
+    idempotencyKey: v.string(),
+    providerMessageId: v.union(v.string(), v.null()),
+    sentAt: v.number(),
+  })
+    .index("by_conference", ["conferenceId"])
+    .index("by_idempotency", ["idempotencyKey"]),
+
   activity: defineTable({
     conferenceId: v.id("conferences"),
     kind: v.string(),
