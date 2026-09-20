@@ -87,6 +87,24 @@ async function latestPlanAssignments(
   };
 }
 
+function withoutUnconsentedMoves(
+  outcome: ReturnType<typeof repairPlan>,
+  previous: readonly AssignmentSummary[],
+): ReturnType<typeof repairPlan> {
+  if (outcome.kind !== "plan") {
+    return outcome;
+  }
+
+  const held = new Set(previous.map((entry) => `${entry.membershipId}:${entry.sessionId}`));
+
+  return {
+    ...outcome,
+    assignments: outcome.assignments.filter((entry) =>
+      held.has(`${entry.membershipId}:${entry.sessionId}`),
+    ),
+  };
+}
+
 export const coverage = query({
   args: { conferenceId: v.id("conferences") },
   handler: async (ctx, args) => {
@@ -175,7 +193,8 @@ export const repair = mutation({
     }
 
     const input = await loadOptimizerInput(ctx, args.conferenceId, conference.agendaUrl);
-    const outcome = repairPlan(input, previous.assignments);
+    const proposed = repairPlan(input, previous.assignments);
+    const outcome = withoutUnconsentedMoves(proposed, previous.assignments);
     const moved =
       outcome.kind === "plan"
         ? countMovedAssignments(input.sessions, previous.assignments, outcome.assignments)

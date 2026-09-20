@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/chrome/empty-state";
 import { PageHeading } from "@/components/chrome/page-heading";
 import { ActivityFeed } from "@/components/board/activity-feed";
 import { BoardView, type BoardLane } from "@/components/board/board-view";
+import { CoverCard } from "@/components/board/cover-card";
 import type { LaneCard } from "@/components/board/lane-column";
 import type { CardState } from "@/components/board/session-card";
 import { useDemoConference } from "@/lib/use-demo-conference";
@@ -35,6 +36,21 @@ export function BoardPage() {
   const plan = useQuery(api.board.latestPlan, id === null ? "skip" : { conferenceId: id });
   const coverage = useQuery(api.plan.coverage, id === null ? "skip" : { conferenceId: id });
   const activity = useQuery(api.activity.recent, id === null ? "skip" : { conferenceId: id });
+  const dropped = useQuery(
+    api.uncovered.droppedSessions,
+    id === null ? "skip" : { conferenceId: id },
+  );
+  const firstDropped = dropped === undefined || dropped.length === 0 ? null : dropped[0];
+  const candidates = useQuery(
+    api.cover.candidatesForSession,
+    id === null || firstDropped === null || firstDropped === undefined
+      ? "skip"
+      : { conferenceId: id, sessionId: firstDropped.sessionId },
+  );
+  const bestCandidate =
+    candidates === undefined || candidates.length === 0 ? null : (candidates[0] ?? null);
+  const proposeCover = useMutation(api.cover.proposeCover);
+  const [asking, setAsking] = useState(false);
 
   const startDemo = async () => {
     setStarting(true);
@@ -61,6 +77,22 @@ export function BoardPage() {
       await repair({ conferenceId: id });
     } finally {
       setRepairing(false);
+    }
+  };
+
+  const askCover = async () => {
+    if (id === null || firstDropped === null || firstDropped === undefined) return;
+    if (firstDropped.droppedBy === null) return;
+
+    setAsking(true);
+    try {
+      await proposeCover({
+        conferenceId: id,
+        sessionId: firstDropped.sessionId,
+        fromMember: firstDropped.droppedBy,
+      });
+    } finally {
+      setAsking(false);
     }
   };
 
@@ -191,6 +223,19 @@ export function BoardPage() {
           void runRelease(membershipId, sessionId);
         }}
       />
+
+      {firstDropped !== null && firstDropped !== undefined && bestCandidate !== null && (
+        <div className="mt-6">
+          <CoverCard
+            sessionTitle={firstDropped.title}
+            candidate={bestCandidate}
+            asking={asking}
+            onAsk={() => {
+              void askCover();
+            }}
+          />
+        </div>
+      )}
 
       <div className="mt-6">
         <ActivityFeed rows={activity ?? []} />

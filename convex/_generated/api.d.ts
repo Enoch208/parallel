@@ -61,6 +61,7 @@ import type * as notes from "../notes.js";
 import type * as plan from "../plan.js";
 import type * as scoring from "../scoring.js";
 import type * as team from "../team.js";
+import type * as uncovered from "../uncovered.js";
 
 import type {
   ApiFromModules,
@@ -122,6 +123,7 @@ declare const fullApi: ApiFromModules<{
   plan: typeof plan;
   scoring: typeof scoring;
   team: typeof team;
+  uncovered: typeof uncovered;
 }>;
 
 /**
