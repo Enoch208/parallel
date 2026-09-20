@@ -98,6 +98,14 @@ export const resetWorkspace = mutation({
   },
 });
 
+export const removeConference = internalMutation({
+  args: { conferenceId: v.id("conferences") },
+  handler: async (ctx, args) => {
+    const removed = await deleteConferenceGraph(ctx, args.conferenceId);
+    return { removed };
+  },
+});
+
 export const expiredGuestWorkspaces = query({
   args: {},
   handler: async (ctx) => {
