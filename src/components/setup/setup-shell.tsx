@@ -10,6 +10,11 @@ export function errorMessage(error: unknown): string {
   return "The call failed and returned no message.";
 }
 
+export const fieldClass =
+  "min-h-10 w-full min-w-0 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2 text-sm text-white transition-colors placeholder:text-neutral-500 focus:border-blue-500/50 disabled:opacity-60";
+
+export const fieldLabelClass = "text-xs font-medium text-neutral-400";
+
 export function SetupPanel({
   title,
   description,
@@ -57,8 +62,8 @@ export function TextField({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-xs font-medium text-neutral-400">
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <label htmlFor={id} className={fieldLabelClass}>
         {label}
       </label>
       <input
@@ -70,10 +75,10 @@ export function TextField({
         onChange={(event) => {
           onChange(event.target.value);
         }}
-        className="rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none transition-colors placeholder:text-neutral-700 focus:border-blue-500/40 disabled:opacity-60"
+        className={fieldClass}
       />
       {hint !== undefined && (
-        <span className="text-[11px] font-light text-neutral-600">{hint}</span>
+        <span className="text-[11px] font-light text-neutral-400">{hint}</span>
       )}
     </div>
   );
@@ -110,7 +115,7 @@ export function PrimaryButton({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className="flex w-fit shrink-0 items-center gap-2 rounded-full bg-white px-5 py-2 text-sm font-medium text-black transition-colors hover:bg-gray-200 disabled:opacity-60"
+      className="flex min-h-10 w-fit shrink-0 items-center gap-2 rounded-full bg-white px-5 py-2 text-sm font-medium text-black transition-colors hover:bg-gray-200 disabled:opacity-60"
     >
       {children}
     </button>

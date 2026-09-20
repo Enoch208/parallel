@@ -2,7 +2,14 @@ import { useState } from "react";
 import type { GoalSummary } from "@convex/model/types";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
-import { ErrorNote, PrimaryButton, SetupPanel, TextField } from "./setup-shell";
+import {
+  ErrorNote,
+  PrimaryButton,
+  SetupPanel,
+  TextField,
+  fieldClass,
+  fieldLabelClass,
+} from "./setup-shell";
 
 const weights = [1, 2, 3, 4, 5] as const;
 
@@ -45,7 +52,7 @@ export function GoalPanel({
       description="Weights say which goals matter most when the optimizer splits the team. Every session is scored against every goal, and the weighted result is Team Goal Coverage."
     >
       {goals.length === 0 ? (
-        <p className="rounded-xl border border-white/5 bg-white/[0.02] px-4 py-6 text-center text-xs text-neutral-600">
+        <p className="rounded-xl border border-white/5 bg-white/[0.02] px-4 py-6 text-center text-xs text-neutral-400">
           No goals on this conference yet.
         </p>
       ) : (
@@ -80,8 +87,8 @@ export function GoalPanel({
             disabled={adding}
             hint="Short and specific, the way the team would say it out loud."
           />
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="goal-weight" className="text-xs font-medium text-neutral-400">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <label htmlFor="goal-weight" className={fieldLabelClass}>
               Weight
             </label>
             <select
@@ -91,7 +98,7 @@ export function GoalPanel({
               onChange={(event) => {
                 setWeight(Number(event.target.value));
               }}
-              className="rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-blue-500/40 disabled:opacity-60"
+              className={fieldClass}
             >
               {weights.map((value) => (
                 <option key={value} value={value} className="bg-neutral-950">
@@ -99,7 +106,7 @@ export function GoalPanel({
                 </option>
               ))}
             </select>
-            <span className="text-[11px] font-light text-neutral-600">
+            <span className="text-[11px] font-light text-neutral-400">
               1 is nice, 5 is why we came.
             </span>
           </div>

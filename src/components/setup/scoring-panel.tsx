@@ -72,7 +72,7 @@ export function ScoringPanel({
         ))}
       </dl>
 
-      <p className="text-[11px] font-light leading-relaxed text-neutral-600" aria-live="polite">
+      <p className="text-[11px] font-light leading-relaxed text-neutral-400" aria-live="polite">
         {result === null
           ? "These read — until a scoring run in this tab returns its own measurements."
           : "Measured by the run that finished in this tab."}

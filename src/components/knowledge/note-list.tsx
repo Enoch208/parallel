@@ -23,7 +23,7 @@ function SourceTag({ source }: { source: ConferenceNote["source"] }) {
   return (
     <span
       className={cx(
-        "flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium",
+        "flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-3 py-0.5 text-[11px] font-medium sm:min-h-0 sm:px-2.5",
         fromEmail
           ? "border-blue-500/30 bg-blue-950/20 text-blue-200"
           : "border-white/10 bg-white/[0.04] text-neutral-300",
@@ -52,7 +52,7 @@ function ApprovalToggle({
         onChange(!approved);
       }}
       className={cx(
-        "shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors disabled:opacity-50",
+        "flex min-h-10 shrink-0 items-center rounded-full border px-3 py-0.5 text-[11px] font-medium transition-colors disabled:opacity-50 sm:min-h-0 sm:px-2.5",
         approved
           ? "border-white/10 bg-white/[0.04] text-neutral-300 hover:text-white"
           : "border-amber-500/40 bg-amber-950/20 text-amber-200",
@@ -82,13 +82,13 @@ export function NoteList({
           className="flex flex-col gap-3 rounded-2xl border border-white/5 bg-white/[0.02] p-5"
         >
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex flex-col gap-1">
+            <div className="flex min-w-0 flex-col gap-1">
               <span className="text-sm font-medium text-white">{note.sessionTitle}</span>
               <span className="text-xs text-neutral-500">
                 {note.authorName} · {formatStamp(note.at, timezone)}
               </span>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
               <SourceTag source={note.source} />
               <ApprovalToggle
                 approved={note.approved}

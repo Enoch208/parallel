@@ -47,7 +47,7 @@ export function TeammatePanel({
       description="Teammates never open Parallel. Their plan arrives by email and their replies come back into the board, so the address matters as much as the name."
     >
       {members.length === 0 ? (
-        <p className="rounded-xl border border-white/5 bg-white/[0.02] px-4 py-6 text-center text-xs text-neutral-600">
+        <p className="rounded-xl border border-white/5 bg-white/[0.02] px-4 py-6 text-center text-xs text-neutral-400">
           Nobody is on this team yet.
         </p>
       ) : (
@@ -57,9 +57,11 @@ export function TeammatePanel({
               key={member.id}
               className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3"
             >
-              <span className="flex flex-col">
+              <span className="flex min-w-0 flex-col">
                 <span className="text-sm text-white">{member.displayName}</span>
-                <span className="font-mono text-[11px] text-neutral-500">{member.email}</span>
+                <span className="break-all font-mono text-[11px] text-neutral-400">
+                  {member.email}
+                </span>
               </span>
               {member.isLead && (
                 <span className="shrink-0 rounded-full bg-blue-500/15 px-2.5 py-0.5 text-[10px] font-medium text-blue-300">
@@ -97,7 +99,7 @@ export function TeammatePanel({
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <input
             id="teammate-lead"
             type="checkbox"
@@ -106,9 +108,12 @@ export function TeammatePanel({
             onChange={(event) => {
               setIsLead(event.target.checked);
             }}
-            className="size-4 rounded border-white/20 bg-white/[0.03] accent-blue-500 disabled:opacity-60"
+            className="size-5 shrink-0 rounded border-white/20 bg-white/[0.03] accent-blue-500 disabled:opacity-60"
           />
-          <label htmlFor="teammate-lead" className="text-xs font-medium text-neutral-400">
+          <label
+            htmlFor="teammate-lead"
+            className="flex min-h-10 items-center text-xs font-medium text-neutral-400"
+          >
             Lead — approves changes that move other people
           </label>
         </div>

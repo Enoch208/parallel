@@ -36,11 +36,11 @@ export class WorkspaceErrorBoundary extends Component<Props, State> {
             The saved workspace may have been reset or removed. Starting a fresh one will not affect
             anyone else.
           </p>
-          <p className="max-w-full break-words font-mono text-[11px] text-neutral-700">{message}</p>
+          <p className="max-w-full break-words font-mono text-[11px] text-neutral-400">{message}</p>
           <button
             type="button"
             onClick={this.handleReset}
-            className="mt-2 rounded-full bg-white px-6 py-2 text-sm font-medium text-black transition-colors hover:bg-gray-200"
+            className="mt-2 min-h-10 rounded-full bg-white px-6 py-2 text-sm font-medium text-black transition-colors hover:bg-gray-200"
           >
             Start a fresh workspace
           </button>

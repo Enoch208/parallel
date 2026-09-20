@@ -25,7 +25,7 @@ function SessionRow({ session, timezone }: { session: SessionSummary; timezone: 
         {formatTimeRange(session.startsAt, session.endsAt, timezone)}
       </span>
 
-      <div className="flex flex-1 flex-col gap-1.5">
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <h4 className="text-sm font-medium leading-snug text-white">{session.title}</h4>
         {meta.length > 0 && (
           <p className="text-xs font-light text-neutral-500">{meta.join(" · ")}</p>
@@ -48,7 +48,7 @@ function SessionRow({ session, timezone }: { session: SessionSummary; timezone: 
         href={session.sourceUrl}
         target="_blank"
         rel="noreferrer"
-        className="flex shrink-0 items-center gap-1 text-[11px] font-medium text-neutral-500 transition-colors hover:text-white"
+        className="flex min-h-10 shrink-0 items-center gap-1 text-[11px] font-medium text-neutral-400 transition-colors hover:text-white md:min-h-0"
       >
         Source
         <HugeiconsIcon icon={ArrowUpRight01Icon} size={13} />
@@ -98,7 +98,7 @@ export function SessionList({
 
       {days.map((group) => (
         <section key={group.day} className="flex flex-col gap-2">
-          <h3 className="text-xs font-medium uppercase tracking-wider text-neutral-600">
+          <h3 className="text-xs font-medium uppercase tracking-wider text-neutral-400">
             {group.day}
           </h3>
           <ul className="flex flex-col gap-2">

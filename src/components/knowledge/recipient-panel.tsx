@@ -57,7 +57,7 @@ export function RecipientPanel({
         {teamRecipients.map((address) => (
           <li
             key={address}
-            className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-neutral-400"
+            className="flex min-h-10 max-w-full items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs break-all text-neutral-400 sm:min-h-0"
           >
             {address} · team lead
           </li>
@@ -65,16 +65,16 @@ export function RecipientPanel({
         {recipients.map((recipient) => (
           <li
             key={recipient.id}
-            className="flex items-center gap-2 rounded-full border border-blue-500/25 bg-blue-950/20 px-3 py-1 text-xs text-blue-100"
+            className="flex min-h-10 max-w-full items-center gap-2 rounded-full border border-blue-500/25 bg-blue-950/20 px-3 py-1 text-xs text-blue-100 sm:min-h-0"
           >
-            {recipient.email}
+            <span className="break-all">{recipient.email} · added by the lead</span>
             <button
               type="button"
               aria-label={`Remove ${recipient.email}`}
               onClick={() => {
                 void onRemove(recipient.id);
               }}
-              className="text-blue-300 transition-colors hover:text-white"
+              className="flex min-h-10 shrink-0 items-center justify-center px-1 text-blue-300 transition-colors hover:text-white sm:min-h-0"
             >
               <HugeiconsIcon icon={Cancel01Icon} size={12} />
             </button>

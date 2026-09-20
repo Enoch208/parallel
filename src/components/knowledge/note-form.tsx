@@ -3,11 +3,14 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { MessageAdd01Icon } from "@hugeicons/core-free-icons";
 import type { TeamMemberSummary } from "@convex/board";
 import type { SessionSummary } from "@convex/model/types";
-import { ErrorNote, PrimaryButton, SetupPanel } from "@/components/setup/setup-shell";
+import {
+  ErrorNote,
+  PrimaryButton,
+  SetupPanel,
+  fieldClass,
+  fieldLabelClass,
+} from "@/components/setup/setup-shell";
 import { formatTimeRange } from "@/lib/format-time";
-
-const selectClass =
-  "rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-blue-500/40 disabled:opacity-60";
 
 export function NoteForm({
   sessions,
@@ -64,9 +67,9 @@ export function NoteForm({
           submit();
         }}
       >
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="note-session" className="text-xs font-medium text-neutral-400">
+        <div className="grid min-w-0 gap-4 md:grid-cols-2">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <label htmlFor="note-session" className={fieldLabelClass}>
               Session
             </label>
             <select
@@ -76,7 +79,7 @@ export function NoteForm({
               onChange={(event) => {
                 setSessionId(event.target.value);
               }}
-              className={selectClass}
+              className={fieldClass}
             >
               <option value="" className="bg-neutral-950">
                 Choose a session
@@ -89,8 +92,8 @@ export function NoteForm({
             </select>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="note-member" className="text-xs font-medium text-neutral-400">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <label htmlFor="note-member" className={fieldLabelClass}>
               Teammate
             </label>
             <select
@@ -100,7 +103,7 @@ export function NoteForm({
               onChange={(event) => {
                 setMembershipId(event.target.value);
               }}
-              className={selectClass}
+              className={fieldClass}
             >
               <option value="" className="bg-neutral-950">
                 Choose a teammate
@@ -114,8 +117,8 @@ export function NoteForm({
           </div>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="note-body" className="text-xs font-medium text-neutral-400">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <label htmlFor="note-body" className={fieldLabelClass}>
             Takeaway
           </label>
           <textarea
@@ -127,7 +130,7 @@ export function NoteForm({
             onChange={(event) => {
               setBody(event.target.value);
             }}
-            className="rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2 text-sm leading-relaxed text-white outline-none transition-colors placeholder:text-neutral-700 focus:border-blue-500/40 disabled:opacity-60"
+            className={`${fieldClass} leading-relaxed`}
           />
         </div>
 

@@ -59,10 +59,10 @@ export function BriefBody({ body }: { body: string }) {
 
         if (block.kind === "claim") {
           return (
-            <div key={key} className="flex flex-col gap-1.5 border-l border-white/10 pl-4">
+            <div key={key} className="flex min-w-0 flex-col gap-1.5 border-l border-white/10 pl-4">
               <p className="text-sm leading-relaxed text-neutral-200">{block.text}</p>
               {block.source !== null && (
-                <span className="w-fit rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-[11px] font-light text-neutral-400">
+                <span className="w-fit max-w-full rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-[11px] font-light break-words text-neutral-400">
                   Source: {block.source}
                 </span>
               )}

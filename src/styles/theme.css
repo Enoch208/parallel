@@ -4,7 +4,7 @@
   --color-neutral-200: #e5e5e5;
   --color-neutral-300: #d4d4d4;
   --color-neutral-400: #a3a3a3;
-  --color-neutral-500: #737373;
+  --color-neutral-500: #7b7b7b;
   --color-neutral-600: #525252;
   --color-neutral-700: #404040;
   --color-neutral-800: #262626;
@@ -89,10 +89,18 @@
   }
 
   a:focus-visible,
-  button:focus-visible {
+  button:focus-visible,
+  [role="button"]:focus-visible {
     outline: 2px solid #60a5fa;
     outline-offset: 3px;
     border-radius: 9999px;
+  }
+
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid #60a5fa;
+    outline-offset: 2px;
   }
 }
 
@@ -146,5 +154,14 @@
   .animate-ping,
   .animate-pulse {
     animation: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
   }
 }
