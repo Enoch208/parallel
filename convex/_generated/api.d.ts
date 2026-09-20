@@ -39,6 +39,7 @@ import type * as guest from "../guest.js";
 import type * as http from "../http.js";
 import type * as importAgenda from "../importAgenda.js";
 import type * as importWrites from "../importWrites.js";
+import type * as judges from "../judges.js";
 import type * as model_agendaSchema from "../model/agendaSchema.js";
 import type * as model_agentmailClient from "../model/agentmailClient.js";
 import type * as model_briefSchema from "../model/briefSchema.js";
@@ -101,6 +102,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   importAgenda: typeof importAgenda;
   importWrites: typeof importWrites;
+  judges: typeof judges;
   "model/agendaSchema": typeof model_agendaSchema;
   "model/agentmailClient": typeof model_agentmailClient;
   "model/briefSchema": typeof model_briefSchema;

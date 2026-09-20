@@ -6,6 +6,7 @@ import { AgendaPage } from "./routes/agenda-page";
 import { BoardPage } from "./routes/board-page";
 import { BriefPage } from "./routes/brief-page";
 import { GoalsPage } from "./routes/goals-page";
+import { JudgesPage } from "./routes/judges-page";
 import { LandingPage } from "./routes/landing-page";
 import { NotesPage } from "./routes/notes-page";
 import { NotFoundPage } from "./routes/not-found-page";
@@ -27,6 +28,7 @@ export function App() {
                 <Route path="/goals" element={<GoalsPage />} />
                 <Route path="/notes" element={<NotesPage />} />
                 <Route path="/brief" element={<BriefPage />} />
+                <Route path="/judges" element={<JudgesPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </AppShell>
