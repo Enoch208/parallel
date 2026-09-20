@@ -11,6 +11,14 @@ export const activityKind = [
   "plan_repaired",
   "assignment_claimed",
   "assignment_released",
+  "reply_received",
+  "constraint_added",
+  "constraint_removed",
+  "cover_accepted",
+  "takeaway_prompt_due",
+  "brief_generated",
+  "agenda_fetched",
+  "sessions_extracted",
 ] as const;
 export type ActivityKind = (typeof activityKind)[number];
 
