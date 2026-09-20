@@ -15,7 +15,15 @@ export const convexModules = Object.fromEntries(
 export const HOUR = 60 * 60 * 1000;
 export const BASE = Date.UTC(2026, 8, 22, 9, 0, 0);
 
+export interface ExtraSession {
+  readonly conferenceId: Id<"conferences">;
+  readonly title: string;
+  readonly startsAt: number;
+  readonly endsAt: number;
+}
+
 export interface CoverFixture {
+  readonly sourceId: Id<"sources">;
   readonly conferenceId: Id<"conferences">;
   readonly planId: Id<"plans">;
   readonly droppedSessionId: Id<"sessions">;
@@ -100,6 +108,7 @@ export async function seedCoverScenario(
   });
 
   return {
+    sourceId,
     conferenceId,
     planId,
     droppedSessionId,
@@ -109,4 +118,26 @@ export async function seedCoverScenario(
     bystanderId,
     requestId,
   };
+}
+
+export async function addSession(
+  ctx: MutationCtx,
+  fixture: CoverFixture,
+  title: string,
+  startsAt: number,
+): Promise<Id<"sessions">> {
+  return ctx.db.insert("sessions", {
+    conferenceId: fixture.conferenceId,
+    sourceId: fixture.sourceId,
+    externalKey: `${title}@${String(startsAt)}`,
+    title,
+    track: null,
+    room: null,
+    speakers: [],
+    startsAt,
+    endsAt: startsAt + HOUR,
+    titleConfidence: "high",
+    timeConfidence: "high",
+    roomConfidence: "high",
+  });
 }

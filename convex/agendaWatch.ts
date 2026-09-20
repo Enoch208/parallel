@@ -166,14 +166,19 @@ export const confirmAgendaChanges = mutation({
     const nextByKey = new Map(args.next.map((session) => [session.externalKey, session]));
 
     for (const change of diff.changes) {
+      if (change.nextExternalKey === null) {
+        continue;
+      }
+
       const row = byKey.get(change.externalKey);
-      const incoming = nextByKey.get(change.externalKey);
+      const incoming = nextByKey.get(change.nextExternalKey);
 
       if (change.kind === "added" || row === undefined || incoming === undefined) {
         continue;
       }
 
       await ctx.db.patch(row._id, {
+        externalKey: incoming.externalKey,
         title: incoming.title,
         room: incoming.room,
         startsAt: incoming.startsAt,
