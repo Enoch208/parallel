@@ -12,4 +12,10 @@ crons.interval(
   { windowMinutes: takeawayWindowMinutes },
 );
 
+crons.interval("watch published agendas", { minutes: 30 }, internal.agendaSweep.sweepAgendas, {
+  trigger: "Scheduled sweep",
+});
+
+crons.interval("clean up guest workspaces", { hours: 6 }, internal.guest.cleanupExpiredGuests, {});
+
 export default crons;
