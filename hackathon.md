@@ -11,13 +11,38 @@ come back as ordinary replies.
 - **Demo video:** not yet recorded
 - **Posts:** not yet published
 
+## The verified production run
+
+**[Open the real plan](https://joyous-akita-768.convex.site/board?c=js711hd3g819z5kw11bv8ntqm58erbt5)** — one
+permanent workspace on production holding a complete run. Nothing in it is seeded.
+
+- The agenda is the public [ViVE 2026 agenda](https://www.viveevent.com/agenda/), scraped by
+  Firecrawl and stored with its fetch time and content hash. Unofficial, and not affiliated with
+  the event.
+- OpenAI normalized nine sessions from that page and scored each one against the team's four goals.
+- The optimizer split the team: Team Goal Coverage 90.5 across nine unique sessions.
+- A teammate replied by email, in his own words, that he could not make an 11:30 session. The
+  signature-verified webhook accepted it, OpenAI parsed it at 0.98 confidence, and the sentence it
+  relied on is stored verbatim beside the constraint.
+- The plan went stale against the revision guard. The repair moved **one** person: coverage 90.5 to
+  88.8, with one session left open rather than silently dropped.
+- Parallel emailed the best-placed teammate with the arithmetic for why him. He replied YES.
+  Coverage returned to 90.5 across nine unique sessions.
+
+Open **How Parallel worked** on that board to see each step with the service that performed it, and
+**Evidence** to follow any number back to its source.
+
+Two of the five teammates are real people with real inboxes. The other three are placeholders whose
+addresses do not receive mail, and the board reports the one duplicate attendance rather than
+hiding it.
+
 ## Judge path, 60 seconds
 
 1. Open **[/judges](https://joyous-akita-768.convex.site/judges)** and press **Run the demo**. It
    runs the real engine on a workspace of your own and shows five steps with the numbers computed
    as they happen: everyone planning alone, the optimizer splitting the team, a teammate replying
    that they cannot make a session, the repair moving only that person, and the best-placed
-   teammate being asked to cover.
+   cover candidate being proposed. The reply is simulated and this path sends no email.
 2. Press **Open this workspace on the board** to land on the live board for that same workspace.
 3. Open **How Parallel worked** at the bottom of the board to see which service did what, and how
    long each step took.
@@ -72,12 +97,17 @@ The full chain has been exercised end to end on the development deployment
 - **4 takeaways** and a generated brief in which every claim cites a note that was handed to the
   model.
 
-The production deployment behind the live link currently holds **seeded demo data only**: two
-demo conferences on a reserved example domain, 28 sessions and 112 scores, all flagged
-`isDemoData`. Pressing **Run the demo** on `/judges` builds a fresh workspace and runs the real
-optimizer, repair and cover ranking against it, so everything a judge sees computed is genuinely
-computed — but the scraped agenda and the email round-trip above were demonstrated on the
-development deployment, not this one.
+Production was checked directly on **20 September 2026**. Alongside the seeded demo workspaces,
+it holds a real ViVE import with **9 sessions**, a source URL, fetch time and SHA-256 content hash,
+and **35 of 36 requested relevance scores** recorded with `gpt-5.4-mini`. Three plan sends have
+AgentMail provider message IDs. One real reply reached the signed webhook, routed to the correct
+teammate, and was parsed as `cant_attend` with confidence 0.99. It remains **pending confirmation**:
+the quoted time did not identify an imported session, so no block was applied and the plan did
+not become stale. This verifies production receipt and parsing, not a completed reply-to-repair
+round trip. See the [production verification record](production-proof.md) for the evidence and gaps.
+
+Pressing **Run the demo** on `/judges` builds a fresh seeded workspace and runs the real optimizer,
+repair and cover ranking. Its constraint change is simulated; it does not send or receive email.
 
 Demo data is labelled as demo data in the interface. The seeded demo conference is a fictional
 event on a reserved example domain, so no invented agenda is ever attributed to a real organizer.
@@ -107,9 +137,13 @@ search explores the whole space and reports **proven optimal**. On a larger one 
 plan it found together with a mathematically derived upper bound, so the most it could be wrong by
 is stated rather than hidden.
 
-Repair is a separate proof. When constraints change, Parallel computes the **lexicographic
-minimum** number of teammates who have to move, and will not move anyone else — a repair that
-would reassign an uninvolved teammate's day is refused, because that person never consented to it.
+Repair has two distinct results. `repairWithMinimumDisruption` identifies the minimum set of
+teammates whose current schedules cannot remain feasible; its further assignment and coverage
+tie-breaks may exhaust their search budget. `plan.repair` stores that analysis as metadata, but
+saves assignments from `repairPlan` after filtering out new member/session pairs. The saved
+plan is therefore a conservative consent-filtered proposal, not the lexicographically optimal
+plan from the separate analysis. Cover acceptance adds an assignment only after consent and
+fresh feasibility checks.
 
 Coverage is reported against the largest set of sessions the team could physically attend, solved
 exactly as a k-track interval scheduling problem rather than estimated.
@@ -117,11 +151,19 @@ exactly as a k-track interval scheduling problem rather than estimated.
 The engine is verified by randomized property testing rather than a handful of fixtures: generated
 instances checked for hard-constraint violations, exact-versus-brute-force comparisons with zero
 disagreements, and determinism checked by running the same instance twice and by reversing input
-order. **36 test files, 313 tests.** The tests also found that beam search alone is genuinely
+order. **37 test files, 314 tests passed locally on 20 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
+excluding proposed cover that has not been accepted. The tests found that beam search alone is genuinely
 suboptimal on a measurable share of instances, which is why the exact mode exists.
 
 ## Known issues
 
+- The real production import has 35 of 36 requested relevance scores. Missing model output can
+  leave an incomplete score matrix even though the import workflow completes.
+- Replies that need clarification remain pending in the backend; the app does not yet expose a
+  confirmation control. The real production reply is currently in this state.
+- The Evidence screen uses the browser's selected workspace. There is no direct public read-only
+  link to the real production proof workspace yet.
+- The CI workflow is prepared locally; it has not run on GitHub yet.
 - On a large agenda the solver runs out of search budget and reports "best found, not proven
   optimal" with the size of the gap, rather than claiming an optimum it has not proved. The demo
   agenda is just past that threshold.
