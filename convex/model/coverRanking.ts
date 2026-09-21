@@ -123,8 +123,21 @@ export function rankCoverCandidates(input: CoverInput, sessionId: string): Cover
     });
   }
 
-  return candidates.sort(
+  const ordered = candidates.map((candidate) => ({
+    candidate,
+    interested: marksInterest(input, candidate.membershipId, sessionId),
+    load: input.assignments.filter(
+      (assignment) => assignment.membershipId === candidate.membershipId,
+    ).length,
+  }));
+
+  ordered.sort(
     (left, right) =>
-      right.coverageGain - left.coverageGain || left.membershipId.localeCompare(right.membershipId),
+      right.candidate.coverageGain - left.candidate.coverageGain ||
+      Number(right.interested) - Number(left.interested) ||
+      left.load - right.load ||
+      left.candidate.membershipId.localeCompare(right.candidate.membershipId),
   );
+
+  return ordered.map((entry) => entry.candidate);
 }

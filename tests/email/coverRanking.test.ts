@@ -115,3 +115,43 @@ describe("cover reasons", () => {
     }
   });
 });
+
+describe("separating two equally placed teammates", () => {
+  const tied: CoverInput = {
+    ...base,
+    members: [
+      { id: "zoe", displayName: "Zoe" },
+      { id: "adam", displayName: "Adam" },
+    ],
+    assignments: [{ sessionId: "other", membershipId: "adam", pinned: false, reason: "fixture" }],
+    preferences: [],
+  };
+
+  it("prefers the teammate who said they wanted the session", () => {
+    const ranked = rankCoverCandidates(
+      {
+        ...tied,
+        preferences: [{ membershipId: "zoe", sessionId: "dropped", stance: "interested" }],
+      },
+      "dropped",
+    );
+
+    expect(ranked[0]?.membershipId).toBe("zoe");
+  });
+
+  it("otherwise asks whoever is carrying the lighter day", () => {
+    const ranked = rankCoverCandidates(tied, "dropped");
+
+    expect(ranked[0]?.membershipId).toBe("zoe");
+    expect(ranked[0]?.coverageGain).toBe(ranked[1]?.coverageGain);
+  });
+
+  it("stays deterministic when nothing at all separates them", () => {
+    const evenly: CoverInput = { ...tied, assignments: [] };
+    const first = rankCoverCandidates(evenly, "dropped").map((c) => c.membershipId);
+    const second = rankCoverCandidates(evenly, "dropped").map((c) => c.membershipId);
+
+    expect(first).toEqual(second);
+    expect(first[0]).toBe("adam");
+  });
+});
