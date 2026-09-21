@@ -255,7 +255,7 @@ export const repair = mutation({
       summary:
         outcome.kind === "infeasible"
           ? "No repair fits the pinned sessions"
-          : `${String(moved)} moved, Team Goal Coverage ${String(Math.round(outcome.coverage.teamGoalCoverage))}`,
+          : `${String(moved)} moved, Team Goal Coverage ${String(Math.round(computeCoverageSummary(input, outcome.assignments).teamGoalCoverage))}`,
     });
 
     return { planId, kind: outcome.kind, moved };
