@@ -17,6 +17,7 @@ https://github.com/user-attachments/assets/19891333-4520-40de-a375-207f92427ae2
 - **Verified real run:**
   [the production board](https://joyous-akita-768.convex.site/board?c=js711hd3g819z5kw11bv8ntqm58erbt5),
   also one click from `/judges`
+- **Launch post:** [the thread on X](https://x.com/dreyethh/status/2102150744862310756)
 - **Submission notes:** [`hackathon.md`](hackathon.md)
 
 ---
