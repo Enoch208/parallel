@@ -100,6 +100,28 @@ export function matchSessionByTime(
   );
 }
 
+const titleFiller = new Set([
+  "a",
+  "an",
+  "and",
+  "at",
+  "for",
+  "in",
+  "of",
+  "on",
+  "session",
+  "talk",
+  "the",
+  "to",
+]);
+
+function significantWords(text: string): string[] {
+  return text
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((word) => word.length > 0 && !titleFiller.has(word));
+}
+
 export function matchSessionByTitle(
   sessions: readonly SessionSummary[],
   hint: string,
@@ -110,5 +132,24 @@ export function matchSessionByTitle(
     return null;
   }
 
-  return onlyMatch(sessions.filter((session) => session.title.toLowerCase().includes(needle)));
+  const contiguous = onlyMatch(
+    sessions.filter((session) => session.title.toLowerCase().includes(needle)),
+  );
+
+  if (contiguous !== null) {
+    return contiguous;
+  }
+
+  const wanted = significantWords(hint);
+
+  if (wanted.length === 0) {
+    return null;
+  }
+
+  return onlyMatch(
+    sessions.filter((session) => {
+      const present = new Set(significantWords(session.title));
+      return wanted.every((word) => present.has(word));
+    }),
+  );
 }

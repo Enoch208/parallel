@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { hourFromTimeHint, matchSessionByTime } from "../../convex/model/sessionMatch";
+import {
+  hourFromTimeHint,
+  matchSessionByTime,
+  matchSessionByTitle,
+} from "../../convex/model/sessionMatch";
 import type { SessionSummary } from "../../convex/model/types";
 
 const HOUR = 60 * 60 * 1000;
@@ -106,5 +110,40 @@ describe("ambiguous session matching", () => {
     expect(() =>
       matchSessionByTime([sessionAt("s1", "Platform", 0)], "2pm", "Not/AZone"),
     ).not.toThrow();
+  });
+});
+
+describe("matching a title the way a teammate actually writes it", () => {
+  const agenda = [
+    sessionAt(
+      "s1",
+      "Community Health Centers 101: Purpose Meets Innovation and Partnership Workshop",
+      0,
+    ),
+    sessionAt("s2", "Nursing and Remote Care: Expanding Care Delivery Beyond the Bedside", HOUR),
+    sessionAt("s3", "Reimagining Nursing Workflows: Giving Time Back to Care", 2 * HOUR),
+    sessionAt("s4", "The Evolution of Nursing in a Tech-Enabled Future", 3 * HOUR),
+  ];
+
+  it("matches when the words are split by the part of the title nobody quotes", () => {
+    expect(matchSessionByTitle(agenda, "Community Health Centers 101 workshop")?.id).toBe("s1");
+  });
+
+  it("still matches a contiguous fragment", () => {
+    expect(matchSessionByTitle(agenda, "Community Health Centers")?.id).toBe("s1");
+    expect(matchSessionByTitle(agenda, "Remote Care")?.id).toBe("s2");
+  });
+
+  it("refuses to guess when the words fit more than one session", () => {
+    expect(matchSessionByTitle(agenda, "nursing")).toBeNull();
+    expect(matchSessionByTitle(agenda, "the nursing session")).toBeNull();
+  });
+
+  it("returns nothing when a word in the hint appears in no title", () => {
+    expect(matchSessionByTitle(agenda, "Community Health Centers 202")).toBeNull();
+  });
+
+  it("ignores a hint too short to mean anything", () => {
+    expect(matchSessionByTitle(agenda, "the")).toBeNull();
   });
 });
