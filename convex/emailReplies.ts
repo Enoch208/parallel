@@ -137,6 +137,7 @@ export const applyParsedReply = internalMutation({
     confidence: v.number(),
     quote: v.union(v.string(), v.null()),
     sessionId: v.union(v.id("sessions"), v.null()),
+    body: v.string(),
     applied: v.boolean(),
   },
   handler: async (ctx, args) => {
@@ -161,6 +162,31 @@ export const applyParsedReply = internalMutation({
 
     if (session === null) {
       return { applied: false, reason: "unknown_session" as const };
+    }
+
+    if (args.intent === "takeaways") {
+      const author = await ctx.db.get(event.membershipId);
+
+      await ctx.db.insert("notes", {
+        conferenceId: event.conferenceId,
+        sessionId: args.sessionId,
+        membershipId: event.membershipId,
+        body: args.body.trim(),
+        source: "email",
+      });
+
+      await ctx.db.insert("activity", {
+        conferenceId: event.conferenceId,
+        kind: "note_added",
+        sponsor: "agentmail",
+        durationMs: 0,
+        summary:
+          author === null
+            ? `Takeaway received for "${session.title}"`
+            : `Takeaway from ${author.displayName} on "${session.title}"`,
+      });
+
+      return { applied: true, reason: null };
     }
 
     await ctx.db.insert("availabilityBlocks", {
@@ -244,7 +270,9 @@ export const parseAndApply = action({
 
     let sessionId: Id<"sessions"> | null = null;
 
-    if (parsed.intent === "cant_attend") {
+    const namesASession = parsed.intent === "cant_attend" || parsed.intent === "takeaways";
+
+    if (namesASession) {
       const byTime =
         parsed.timeHint === null
           ? null
@@ -257,8 +285,7 @@ export const parseAndApply = action({
       sessionId = chosen === null ? null : (chosen.id as Id<"sessions">);
     }
 
-    const applied =
-      parsed.intent === "cant_attend" && shouldApplyAutomatically(parsed) && sessionId !== null;
+    const applied = namesASession && shouldApplyAutomatically(parsed) && sessionId !== null;
 
     const outcome = await ctx.runMutation(internal.emailReplies.applyParsedReply, {
       eventId: args.eventId,
@@ -266,6 +293,7 @@ export const parseAndApply = action({
       confidence: parsed.confidence,
       quote: parsed.quote,
       sessionId,
+      body: context.body,
       applied,
     });
 
