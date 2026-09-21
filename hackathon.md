@@ -21,13 +21,22 @@ permanent workspace on production holding a complete run. Nothing in it is seede
   the event.
 - OpenAI normalized nine sessions from that page and scored each one against the team's four goals.
 - The optimizer split the team: Team Goal Coverage 90.5 across nine unique sessions.
-- A teammate replied by email, in his own words, that he could not make an 11:30 session. The
-  signature-verified webhook accepted it, OpenAI parsed it at 0.98 confidence, and the sentence it
-  relied on is stored verbatim beside the constraint.
+- A teammate replied by email that he could not make an 11:30 session. The signature-verified
+  webhook accepted it, OpenAI parsed it at 0.98 confidence, and the sentence it relied on is stored
+  verbatim beside the constraint.
 - The plan went stale against the revision guard. The repair moved **one** person: coverage 90.5 to
   88.8, with one session left open rather than silently dropped.
 - Parallel emailed the best-placed teammate with the arithmetic for why him. He replied YES.
   Coverage returned to 90.5 across nine unique sessions.
+- He then replied with a takeaway from the session he covered. It was filed as a note against that
+  session, OpenAI wrote the brief from it with a source on every claim, and AgentMail delivered the
+  brief to the team lead.
+
+The email is real: two real inboxes, real replies, a verified webhook and real deliveries. The
+conference is played out. Nobody on the team attended ViVE 2026, so the reasons in the replies and
+the takeaway were written for the run rather than lived. His first attempt at the takeaway named the
+session and said nothing else; Parallel now keeps a reply like that pending instead of filing it,
+and that empty note is marked rejected so the brief never used it.
 
 The board reads **91.1** today rather than 90.5. One of the thirty-six session-and-goal pairs had no
 model output when the run took place; scoring it afterwards completed the matrix and moved the
@@ -112,8 +121,10 @@ and a complete **36 of 36 relevance scores** recorded with `gpt-5.4-mini`. Plan 
 provider message IDs, and the reply-to-repair round trip has completed on that workspace: a real
 reply reached the signed webhook, was parsed as `cant_attend` at 0.98 confidence, became an
 availability block carrying the teammate's verbatim sentence, marked the plan stale, drove a
-one-person repair, and a second teammate accepted the cover by replying YES. That workspace is
-linked at the top of this file and every step is listed in its activity panel.
+one-person repair, and a second teammate accepted the cover by replying YES. That teammate's
+takeaway became the note the brief was written from, and the brief was delivered through AgentMail
+with a provider message ID. That workspace is linked at the top of this file and every step is
+listed in its activity panel.
 
 Pressing **Run the demo** on `/judges` builds a fresh seeded workspace and runs the real optimizer,
 repair and cover ranking. Its constraint change is simulated; it does not send or receive email.
@@ -168,8 +179,9 @@ suboptimal on a measurable share of instances, which is why the exact mode exist
 
 ## Known issues
 
-- The brief closes the loop in the product and is covered by tests, but the permanent production
-  run above stops at the accepted cover; it does not yet carry takeaways and a sent brief.
+- The brief in the production run rests on one takeaway, because only one teammate with a working
+  inbox reported back. For goals nobody reported on, the model fell back to claims that only cite
+  the agenda ("the agenda included a session titled …"). They are sourced, but they add little.
 - On a large agenda the solver runs out of search budget and reports "best found, not proven
   optimal" with the size of the gap, rather than claiming an optimum it has not proved. The demo
   agenda is just past that threshold.
