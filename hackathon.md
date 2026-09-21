@@ -117,18 +117,20 @@ cost estimate, which the team lead enters and which is captioned as their own fi
 
 ## Convex map
 
-| Feature                      | File                                          | What a user sees                                                                              |
-| ---------------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| Optimizer inside a mutation  | `convex/plan.ts`                              | Press Optimize; the plan is written in one transaction with the constraints it was built from |
-| Durable import workflow      | `convex/importWorkflow.ts`                    | The import shows the step it is on, and survives a failure mid-run                            |
-| Revision guard               | `convex/model/assignmentGuards.ts`            | A stale write is refused: "The plan changed while you were looking at it"                     |
-| One acceptance path          | `convex/model/coverAcceptance.ts`             | Accepting a cover from the board and by email run the same checks                             |
-| Coverage as a reactive query | `convex/plan.ts`                              | Counters move the moment anyone claims or releases                                            |
-| Verified webhook             | `convex/http.ts`, `convex/model/svix.ts`      | Replying to a plan email turns the board amber                                                |
-| Idempotent sends             | `convex/emailSendWrites.ts`                   | Re-running a send delivers nothing twice                                                      |
-| Incremental rescoring        | `convex/scoringReuse.ts`, `convex/scoring.ts` | Re-importing an unchanged agenda spends nothing on the model                                  |
-| Scheduler and crons          | `convex/crons.ts`                             | Takeaway prompts become due when a session ends                                               |
-| Guest workspaces             | `convex/guest.ts`                             | Your clicks never change another visitor's board                                              |
+| Feature                      | File                                               | What a user sees                                                                                         |
+| ---------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Optimizer inside a mutation  | `convex/plan.ts`                                   | Press Optimize; the plan is written in one transaction with the constraints it was built from            |
+| Durable import workflow      | `convex/importWorkflow.ts`                         | The import shows the step it is on, and survives a failure mid-run                                       |
+| Revision guard               | `convex/model/assignmentGuards.ts`                 | A stale write is refused: "The plan changed while you were looking at it"                                |
+| One acceptance path          | `convex/model/coverAcceptance.ts`                  | Accepting a cover from the board and by email run the same checks                                        |
+| Coverage as a reactive query | `convex/plan.ts`                                   | Counters move the moment anyone claims or releases                                                       |
+| Verified webhook             | `convex/http.ts`, `convex/model/svix.ts`           | Replying to a plan email turns the board amber                                                           |
+| Idempotent sends             | `convex/emailSendWrites.ts`                        | Re-running a send delivers nothing twice                                                                 |
+| Daily send budget            | `convex/emailSend.ts`, `convex/emailSendWrites.ts` | Every send is counted against a rolling 24 hour cap before it leaves, so a loop cannot drain the mailbox |
+| Takeaways by reply           | `convex/emailReplies.ts`                           | Answering a plan email with what you learned files a note against that session                           |
+| Incremental rescoring        | `convex/scoringReuse.ts`, `convex/scoring.ts`      | Re-importing an unchanged agenda spends nothing on the model                                             |
+| Scheduler and crons          | `convex/crons.ts`                                  | Takeaway prompts become due when a session ends                                                          |
+| Guest workspaces             | `convex/guest.ts`                                  | Your clicks never change another visitor's board                                                         |
 
 ## What the solver actually proves
 
