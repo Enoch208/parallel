@@ -26,7 +26,7 @@ export function LaneColumn({
   onClaim?: (sessionId: string) => void;
 }) {
   return (
-    <section className="flex min-w-0 flex-1 flex-col gap-3 lg:min-w-[240px]">
+    <section className="flex min-w-0 flex-1 flex-col gap-3 lg:min-w-[186px]">
       <header className="flex items-baseline gap-2 border-b border-white/5 pb-2">
         <h3 className="text-sm font-medium text-white">{memberName}</h3>
         {isLead && (
