@@ -1,14 +1,17 @@
 import type { ConstraintTrail, ReplyRecord } from "@convex/evidence";
+import type { Id } from "@convex/_generated/dataModel";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Mail01Icon } from "@hugeicons/core-free-icons";
 import { formatTimeRange } from "@/lib/format-time";
 import { EvidenceEmpty, Quoted } from "./evidence-primitives";
+import { ResolveReply } from "./resolve-reply";
 
 function ReplyLine({ reply }: { reply: ReplyRecord }) {
   const parts = [
     reply.fromAddress,
     reply.intent === null ? null : `read as ${reply.intent}`,
     reply.confidence === null ? null : `confidence ${reply.confidence.toFixed(2)}`,
+    reply.resolvedByHand ? "resolved by hand" : null,
   ].filter((part): part is string => part !== null);
 
   return (
@@ -22,9 +25,11 @@ function ReplyLine({ reply }: { reply: ReplyRecord }) {
 export function ConstraintEvidence({
   trail,
   timezone,
+  conferenceId,
 }: {
   trail: ConstraintTrail;
   timezone: string;
+  conferenceId: Id<"conferences">;
 }) {
   if (trail.blocks.length === 0 && trail.unlinkedReplies.length === 0) {
     return (
@@ -95,15 +100,16 @@ export function ConstraintEvidence({
             Inbound replies that did not create a block
           </h4>
           <p className="text-[11px] leading-relaxed font-light text-neutral-500">
-            These arrived and were parsed, but no availability block on this conference quotes them.
-            They are shown separately rather than attached to a block Parallel cannot prove they
-            caused.
+            These arrived and were parsed, but Parallel could not tell which session they meant, so
+            it applied nothing rather than guess. A person can resolve one below; the original email
+            is kept and the change is recorded as resolved by hand.
           </p>
           <ul className="flex min-w-0 flex-col gap-2 pt-1">
             {trail.unlinkedReplies.map((reply) => (
               <li key={reply.eventId} className="flex min-w-0 flex-col gap-1.5">
                 {reply.quote !== null && <Quoted text={reply.quote} />}
                 <ReplyLine reply={reply} />
+                <ResolveReply reply={reply} conferenceId={conferenceId} timezone={timezone} />
               </li>
             ))}
           </ul>

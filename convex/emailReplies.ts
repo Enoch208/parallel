@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { action, internalMutation, internalQuery, query } from "./_generated/server";
+import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import type { MutationCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { structuredOutput, extractionModel } from "./model/openaiClient";
@@ -130,6 +131,149 @@ export const resolveCoverReply = internalMutation({
   },
 });
 
+interface ResolvedReply {
+  readonly conferenceId: Id<"conferences">;
+  readonly membershipId: Id<"memberships">;
+  readonly intent: string;
+  readonly sessionId: Id<"sessions">;
+  readonly body: string;
+  readonly quote: string | null;
+  readonly origin: string;
+}
+
+async function applyReplyToSession(
+  ctx: MutationCtx,
+  reply: ResolvedReply,
+): Promise<{ applied: boolean; reason: "unknown_session" | null }> {
+  const session = await ctx.db.get(reply.sessionId);
+
+  if (session === null) {
+    return { applied: false, reason: "unknown_session" };
+  }
+
+  if (reply.intent === "pin") {
+    const existing = await ctx.db
+      .query("memberPreferences")
+      .withIndex("by_member", (q) =>
+        q.eq("conferenceId", reply.conferenceId).eq("membershipId", reply.membershipId),
+      )
+      .collect();
+    const current = existing.find((row) => row.sessionId === reply.sessionId);
+
+    if (current === undefined) {
+      await ctx.db.insert("memberPreferences", {
+        conferenceId: reply.conferenceId,
+        membershipId: reply.membershipId,
+        sessionId: reply.sessionId,
+        stance: "pinned",
+      });
+    } else {
+      await ctx.db.patch(current._id, { stance: "pinned" });
+    }
+
+    await bumpConstraintRevision(ctx, reply.conferenceId);
+    await ctx.db.insert("activity", {
+      conferenceId: reply.conferenceId,
+      kind: "constraint_added",
+      sponsor: "openai",
+      durationMs: 0,
+      summary: `${reply.origin} as a request to pin "${session.title}"`,
+    });
+
+    return { applied: true, reason: null };
+  }
+
+  if (reply.intent === "takeaways") {
+    const author = await ctx.db.get(reply.membershipId);
+
+    await ctx.db.insert("notes", {
+      conferenceId: reply.conferenceId,
+      sessionId: reply.sessionId,
+      membershipId: reply.membershipId,
+      body: reply.body.trim(),
+      source: "email",
+    });
+    await ctx.db.insert("activity", {
+      conferenceId: reply.conferenceId,
+      kind: "note_added",
+      sponsor: "agentmail",
+      durationMs: 0,
+      summary:
+        author === null
+          ? `Takeaway received for "${session.title}"`
+          : `Takeaway from ${author.displayName} on "${session.title}"`,
+    });
+
+    return { applied: true, reason: null };
+  }
+
+  await ctx.db.insert("availabilityBlocks", {
+    conferenceId: reply.conferenceId,
+    membershipId: reply.membershipId,
+    startsAt: session.startsAt,
+    endsAt: session.endsAt,
+    reason: "Replied that they cannot attend",
+    sourceQuote: reply.quote,
+  });
+  await bumpConstraintRevision(ctx, reply.conferenceId);
+  await ctx.db.insert("activity", {
+    conferenceId: reply.conferenceId,
+    kind: "constraint_added",
+    sponsor: "openai",
+    durationMs: 0,
+    summary: `${reply.origin} as cannot attend "${session.title}"`,
+  });
+
+  return { applied: true, reason: null };
+}
+
+export const resolveByHand = mutation({
+  args: {
+    eventId: v.id("emailEvents"),
+    sessionId: v.id("sessions"),
+    intent: v.union(v.literal("cant_attend"), v.literal("takeaways"), v.literal("pin")),
+  },
+  handler: async (ctx, args) => {
+    const event = await ctx.db.get(args.eventId);
+
+    if (event === null || event.conferenceId === null || event.membershipId === null) {
+      throw new Error("That reply is not tied to a teammate on a conference");
+    }
+
+    if (event.handled) {
+      throw new Error("That reply has already been applied");
+    }
+
+    const session = await ctx.db.get(args.sessionId);
+
+    if (session === null || session.conferenceId !== event.conferenceId) {
+      throw new Error("That session is not on this conference agenda");
+    }
+
+    const outcome = await applyReplyToSession(ctx, {
+      conferenceId: event.conferenceId,
+      membershipId: event.membershipId,
+      intent: args.intent,
+      sessionId: args.sessionId,
+      body: event.body,
+      quote: event.quote,
+      origin: "Resolved by hand",
+    });
+
+    if (!outcome.applied) {
+      throw new Error("That session could not be resolved");
+    }
+
+    await ctx.db.patch(args.eventId, {
+      handled: true,
+      resolvedByHand: true,
+      intent: args.intent,
+    });
+
+    return { applied: true };
+  },
+});
+
 export const applyParsedReply = internalMutation({
   args: {
     eventId: v.id("emailEvents"),
@@ -158,92 +302,15 @@ export const applyParsedReply = internalMutation({
       return { applied: false, reason: "needs_confirmation" as const };
     }
 
-    const session = await ctx.db.get(args.sessionId);
-
-    if (session === null) {
-      return { applied: false, reason: "unknown_session" as const };
-    }
-
-    if (args.intent === "pin") {
-      const conferenceId = event.conferenceId;
-      const membershipId = event.membershipId;
-      const existing = await ctx.db
-        .query("memberPreferences")
-        .withIndex("by_member", (q) =>
-          q.eq("conferenceId", conferenceId).eq("membershipId", membershipId),
-        )
-        .collect();
-      const current = existing.find((row) => row.sessionId === args.sessionId);
-
-      if (current === undefined) {
-        await ctx.db.insert("memberPreferences", {
-          conferenceId: event.conferenceId,
-          membershipId: event.membershipId,
-          sessionId: args.sessionId,
-          stance: "pinned",
-        });
-      } else {
-        await ctx.db.patch(current._id, { stance: "pinned" });
-      }
-
-      const pinRevision = await bumpConstraintRevision(ctx, event.conferenceId);
-
-      await ctx.db.insert("activity", {
-        conferenceId: event.conferenceId,
-        kind: "constraint_added",
-        sponsor: "openai",
-        durationMs: 0,
-        summary: `Reply parsed as a request to pin "${session.title}"`,
-      });
-
-      return { applied: true, reason: null, constraintRevision: pinRevision };
-    }
-
-    if (args.intent === "takeaways") {
-      const author = await ctx.db.get(event.membershipId);
-
-      await ctx.db.insert("notes", {
-        conferenceId: event.conferenceId,
-        sessionId: args.sessionId,
-        membershipId: event.membershipId,
-        body: args.body.trim(),
-        source: "email",
-      });
-
-      await ctx.db.insert("activity", {
-        conferenceId: event.conferenceId,
-        kind: "note_added",
-        sponsor: "agentmail",
-        durationMs: 0,
-        summary:
-          author === null
-            ? `Takeaway received for "${session.title}"`
-            : `Takeaway from ${author.displayName} on "${session.title}"`,
-      });
-
-      return { applied: true, reason: null };
-    }
-
-    await ctx.db.insert("availabilityBlocks", {
+    return applyReplyToSession(ctx, {
       conferenceId: event.conferenceId,
       membershipId: event.membershipId,
-      startsAt: session.startsAt,
-      endsAt: session.endsAt,
-      reason: "Replied that they cannot attend",
-      sourceQuote: args.quote,
+      intent: args.intent,
+      sessionId: args.sessionId,
+      body: args.body,
+      quote: args.quote,
+      origin: "Reply parsed",
     });
-
-    const revision = await bumpConstraintRevision(ctx, event.conferenceId);
-
-    await ctx.db.insert("activity", {
-      conferenceId: event.conferenceId,
-      kind: "constraint_added",
-      sponsor: "openai",
-      durationMs: 0,
-      summary: `Reply parsed as cannot attend "${session.title}"`,
-    });
-
-    return { applied: true, reason: null, constraintRevision: revision };
   },
 });
 

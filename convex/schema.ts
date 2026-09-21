@@ -150,6 +150,7 @@ export default defineSchema({
     fromAddress: v.string(),
     rawPayload: v.optional(v.string()),
     handled: v.boolean(),
+    resolvedByHand: v.optional(v.boolean()),
   })
     .index("by_conference", ["conferenceId"])
     .index("by_provider_event", ["providerEventId"])

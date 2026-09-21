@@ -105,7 +105,7 @@ export function EvidencePage() {
           title="What changed the plan"
           description="Each block on somebody's day, with the teammate's own words beside it. A block is joined to an inbound reply only when that reply's stored quote matches the block's quote for the same teammate."
         >
-          <ConstraintEvidence trail={trail} timezone={timezone} />
+          <ConstraintEvidence trail={trail} timezone={timezone} conferenceId={id} />
         </SetupPanel>
 
         <SetupPanel
