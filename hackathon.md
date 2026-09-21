@@ -29,6 +29,11 @@ permanent workspace on production holding a complete run. Nothing in it is seede
 - Parallel emailed the best-placed teammate with the arithmetic for why him. He replied YES.
   Coverage returned to 90.5 across nine unique sessions.
 
+The board reads **91.1** today rather than 90.5. One of the thirty-six session-and-goal pairs had no
+model output when the run took place; scoring it afterwards completed the matrix and moved the
+figure. The steps above are the numbers the run itself produced, and the Evidence screen shows every
+score with the model that made it.
+
 Open **How Parallel worked** on that board to see each step with the service that performed it, and
 **Evidence** to follow any number back to its source.
 
@@ -99,7 +104,7 @@ The full chain has been exercised end to end on the development deployment
 
 Production was checked directly on **21 September 2026**. Alongside the seeded demo workspaces it
 holds a real ViVE import with **9 sessions**, a source URL, fetch time and SHA-256 content hash,
-and **35 of 36 requested relevance scores** recorded with `gpt-5.4-mini`. Plan sends carry AgentMail
+and a complete **36 of 36 relevance scores** recorded with `gpt-5.4-mini`. Plan sends carry AgentMail
 provider message IDs, and the reply-to-repair round trip has completed on that workspace: a real
 reply reached the signed webhook, was parsed as `cant_attend` at 0.98 confidence, became an
 availability block carrying the teammate's verbatim sentence, marked the plan stale, drove a
@@ -159,8 +164,9 @@ suboptimal on a measurable share of instances, which is why the exact mode exist
 
 ## Known issues
 
-- The real production import has 35 of 36 requested relevance scores. Missing model output can
-  leave an incomplete score matrix even though the import workflow completes.
+- The import workflow reports success even when the model returns fewer scores than were requested.
+  The production run finished one pair short and was completed by rescoring; the workflow should
+  treat a short matrix as partial rather than complete.
 - A reply whose wording matches no session stays pending in the backend, and the app exposes no
   control to resolve one by hand. Two replies sent before session matching was widened are still in
   that state and are listed on the Evidence screen.
