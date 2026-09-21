@@ -1,5 +1,7 @@
 # Parallel
 
+[![CI](https://github.com/Enoch208/parallel/actions/workflows/ci.yml/badge.svg)](https://github.com/Enoch208/parallel/actions/workflows/ci.yml)
+
 **Send four people to a conference. Make sure they don't all learn the same thing.**
 
 A company spends thousands sending a team to a multi-track event. Left to themselves, everyone
@@ -26,8 +28,10 @@ email, and brings the learning home as a single brief organized by what the team
    it could be.
 4. **Repair.** A teammate replies to their plan email in their own words. The plan goes stale on
    every screen, the gap becomes visible, and the best-placed teammate is asked to cover — asked,
-   not moved. Repair computes the smallest number of people who have to change their day and
-   refuses to touch anyone else.
+   not moved. A separate analysis identifies the minimum number of teammates whose schedules
+   must change. The saved repair keeps only assignments from the previous plan that survive the
+   repair proposal; new cover assignments require consent. It does not claim that the saved plan
+   is the analysis's optimal repair.
 5. **Brief.** Takeaways arrive as email replies and end as one brief grouped by goal, where every
    claim cites the note it came from.
 
