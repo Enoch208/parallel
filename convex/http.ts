@@ -1,6 +1,6 @@
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
-import { api, internal } from "./_generated/api";
+import { internal } from "./_generated/api";
 import { verifySvixSignature } from "./model/svix";
 import { readEventId, readEventType, readInboundMessage } from "./model/webhookPayload";
 import { readMonitoredUrl } from "./model/monitorPayload";
@@ -54,7 +54,7 @@ http.route({
     });
 
     if (result.stored && !result.unmatched && result.eventId !== null) {
-      await ctx.scheduler.runAfter(0, api.emailReplies.parseAndApply, {
+      await ctx.scheduler.runAfter(0, internal.emailReplies.parseAndApply, {
         eventId: result.eventId,
       });
     }

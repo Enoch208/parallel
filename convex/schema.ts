@@ -26,6 +26,7 @@ export default defineSchema({
     constraintRevision: v.number(),
     isDemoData: v.boolean(),
     dayMarker: v.optional(v.union(v.string(), v.null())),
+    frozen: v.optional(v.boolean()),
   }).index("by_team", ["teamId"]),
 
   sources: defineTable({

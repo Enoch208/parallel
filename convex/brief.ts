@@ -1,21 +1,20 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { computeCoverageSummary } from "./engine";
-import { loadOptimizerInput } from "./model/loadOptimizerInput";
-import { naturalAssignments } from "./model/naturalPlan";
+import { loadTripSummary } from "./model/loadTripSummary";
 import { extractionModel, structuredOutput } from "./model/openaiClient";
 import {
   briefJsonSchema,
   briefSystemPrompt,
   buildBriefPrompt,
-  buildTripSummary,
   parseBrief,
   renderBriefBody,
   verifyBriefSources,
 } from "./model/briefSchema";
 import type { BriefGoalInput, BriefNoteInput, BriefSessionInput } from "./model/briefSchema";
+import { assertWritable } from "./model/frozenConference";
+import { assertWritableFromAction } from "./frozen";
 
 interface BriefInputs {
   readonly eventName: string;
@@ -107,6 +106,8 @@ export const markSent = mutation({
       throw new Error("Brief not found");
     }
 
+    await assertWritable(ctx, brief.conferenceId);
+
     if (brief.sentAt !== null) {
       return { sentAt: brief.sentAt, alreadySent: true };
     }
@@ -150,17 +151,18 @@ export const generateBrief = action({
     tripCostEstimate: v.union(v.number(), v.null()),
   },
   handler: async (ctx, args): Promise<GenerateBriefResult> => {
+    await assertWritableFromAction(ctx, args.conferenceId);
     const apiKey = requireOpenAiKey();
     const inputs: BriefInputs = await ctx.runQuery(internal.brief.loadBriefInputs, {
       conferenceId: args.conferenceId,
     });
 
     if (inputs.goals.length === 0) {
-      throw new Error("Add at least one goal before writing a brief");
+      throw new ConvexError("Add at least one goal before writing a brief");
     }
 
     if (inputs.notes.length === 0) {
-      throw new Error("There are no takeaways to write a brief from");
+      throw new ConvexError("There are no takeaways to write a brief from");
     }
 
     const startedAt = Date.now();
@@ -238,50 +240,17 @@ export const latest = query({
       return null;
     }
 
-    const [brief, plan, noteRows, input] = await Promise.all([
-      ctx.db
-        .query("briefs")
-        .withIndex("by_conference", (q) => q.eq("conferenceId", args.conferenceId))
-        .order("desc")
-        .first(),
-      ctx.db
-        .query("plans")
-        .withIndex("by_conference_computed", (q) => q.eq("conferenceId", args.conferenceId))
-        .order("desc")
-        .first(),
-      ctx.db
-        .query("notes")
-        .withIndex("by_conference", (q) => q.eq("conferenceId", args.conferenceId))
-        .collect(),
-      loadOptimizerInput(ctx, args.conferenceId, conference.agendaUrl),
-    ]);
+    const brief = await ctx.db
+      .query("briefs")
+      .withIndex("by_conference", (q) => q.eq("conferenceId", args.conferenceId))
+      .order("desc")
+      .first();
 
-    const assignments =
-      plan === null
-        ? []
-        : (
-            await ctx.db
-              .query("assignments")
-              .withIndex("by_plan", (q) => q.eq("planId", plan._id))
-              .collect()
-          ).map((row) => ({
-            sessionId: row.sessionId,
-            membershipId: row.membershipId,
-            pinned: row.pinned,
-            reason: row.reason,
-          }));
-
-    const tripSummary = buildTripSummary({
-      eventName: conference.name,
-      attendees: input.members.length,
-      tripCostEstimate: brief === null ? null : brief.tripCostEstimate,
-      sessionsAvailable: input.sessions.length,
-      before: computeCoverageSummary(input, naturalAssignments(input)),
-      after: computeCoverageSummary(input, assignments),
-      noteSessionIds: noteRows
-        .filter((note) => note.approved !== false)
-        .map((note) => note.sessionId),
-    });
+    const tripSummary = await loadTripSummary(
+      ctx,
+      conference,
+      brief === null ? null : brief.tripCostEstimate,
+    );
 
     return {
       brief:

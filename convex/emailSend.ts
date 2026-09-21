@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { action } from "./_generated/server";
 import type { ActionCtx } from "./_generated/server";
 import { api, internal } from "./_generated/api";
@@ -17,6 +17,7 @@ import type {
   SendOutcome,
   ThreadHandle,
 } from "./emailSendWrites";
+import { assertWritableFromAction } from "./frozen";
 
 const dailySendBudget = 80;
 
@@ -86,6 +87,7 @@ export const sendPlanEmails = action({
     ctx,
     args,
   ): Promise<{ sent: number; skipped: number; failed: number; outcomes: SendOutcome[] }> => {
+    await assertWritableFromAction(ctx, args.conferenceId);
     const loaded: PlanTargets | null = await ctx.runQuery(internal.emailSendWrites.planTargets, {
       conferenceId: args.conferenceId,
     });
@@ -156,6 +158,8 @@ export const sendCoverRequest = action({
       throw new Error("That cover request no longer resolves to a teammate and a session");
     }
 
+    await assertWritableFromAction(ctx, detail.conferenceId);
+
     const idempotencyKey = buildIdempotencyKey(
       "cover_request",
       detail.membershipId,
@@ -219,8 +223,10 @@ export const sendBrief = action({
       throw new Error("That brief no longer exists");
     }
 
+    await assertWritableFromAction(ctx, brief.conferenceId);
+
     if (brief.recipients.length === 0) {
-      throw new Error("Add at least one recipient before sending the brief");
+      throw new ConvexError("Add at least one recipient before sending the brief");
     }
 
     const outcomes: SendOutcome[] = [];

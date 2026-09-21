@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
+import { assertWritable } from "./model/frozenConference";
 
 const guestLifetimeMs = 24 * 60 * 60 * 1000;
 
@@ -82,6 +83,7 @@ async function deleteConferenceGraph(
 export const resetWorkspace = mutation({
   args: { conferenceId: v.id("conferences") },
   handler: async (ctx, args) => {
+    await assertWritable(ctx, args.conferenceId);
     const conference = await ctx.db.get(args.conferenceId);
 
     if (conference === null) {

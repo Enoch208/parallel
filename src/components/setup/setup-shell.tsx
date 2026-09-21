@@ -1,8 +1,13 @@
 import type { ReactNode } from "react";
+import { ConvexError } from "convex/values";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Alert02Icon } from "@hugeicons/core-free-icons";
 
 export function errorMessage(error: unknown): string {
+  if (error instanceof ConvexError && typeof error.data === "string") {
+    return error.data;
+  }
+
   if (error instanceof Error && error.message.length > 0) {
     return error.message;
   }

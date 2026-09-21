@@ -1,8 +1,9 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import type { QueryCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
+import { assertWritable } from "./model/frozenConference";
 
 const noteSource = v.union(v.literal("email"), v.literal("app"));
 
@@ -57,6 +58,7 @@ export const addNote = mutation({
     source: noteSource,
   },
   handler: async (ctx, args) => {
+    await assertWritable(ctx, args.conferenceId);
     const body = args.body.trim();
 
     if (body.length === 0) {
@@ -198,8 +200,10 @@ export const setApproval = mutation({
     const note = await ctx.db.get(args.noteId);
 
     if (note === null) {
-      throw new Error("That takeaway no longer exists");
+      throw new ConvexError("That takeaway no longer exists");
     }
+
+    await assertWritable(ctx, note.conferenceId);
 
     await ctx.db.patch(args.noteId, { approved: args.approved });
 
@@ -210,10 +214,11 @@ export const setApproval = mutation({
 export const addBriefRecipient = mutation({
   args: { conferenceId: v.id("conferences"), email: v.string(), addedBy: v.id("memberships") },
   handler: async (ctx, args) => {
+    await assertWritable(ctx, args.conferenceId);
     const email = args.email.trim().toLowerCase();
 
     if (!email.includes("@")) {
-      throw new Error("A recipient needs a valid email address");
+      throw new ConvexError("A recipient needs a valid email address");
     }
 
     const existing = await ctx.db
@@ -250,6 +255,13 @@ export const briefRecipients = query({
 export const removeBriefRecipient = mutation({
   args: { recipientId: v.id("briefRecipients") },
   handler: async (ctx, args) => {
+    const recipient = await ctx.db.get(args.recipientId);
+
+    if (recipient === null) {
+      return { removed: false };
+    }
+
+    await assertWritable(ctx, recipient.conferenceId);
     await ctx.db.delete(args.recipientId);
     return { removed: true };
   },

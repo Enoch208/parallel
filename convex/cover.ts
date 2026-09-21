@@ -9,6 +9,7 @@ import {
   declineCoverRequest,
   type CoverAcceptance,
 } from "./model/coverAcceptance";
+import { assertWritable } from "./model/frozenConference";
 
 async function latestPlanId(
   ctx: QueryCtx | MutationCtx,
@@ -62,6 +63,7 @@ export const proposeCover = mutation({
     fromMember: v.id("memberships"),
   },
   handler: async (ctx, args) => {
+    await assertWritable(ctx, args.conferenceId);
     const conference = await ctx.db.get(args.conferenceId);
 
     if (conference === null) {
@@ -102,6 +104,10 @@ export const markAsked = mutation({
   handler: async (ctx, args) => {
     const request = await ctx.db.get(args.requestId);
 
+    if (request !== null) {
+      await assertWritable(ctx, request.conferenceId);
+    }
+
     if (request === null || request.status !== "proposed") {
       return { status: request === null ? null : request.status };
     }
@@ -119,5 +125,13 @@ export const acceptCover = mutation({
 
 export const declineCover = mutation({
   args: { requestId: v.id("coverRequests") },
-  handler: (ctx, args) => declineCoverRequest(ctx, args.requestId),
+  handler: async (ctx, args) => {
+    const request = await ctx.db.get(args.requestId);
+
+    if (request !== null) {
+      await assertWritable(ctx, request.conferenceId);
+    }
+
+    return declineCoverRequest(ctx, args.requestId);
+  },
 });

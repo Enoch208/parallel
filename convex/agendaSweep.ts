@@ -8,7 +8,7 @@ export const watchedConferences = internalQuery({
     const conferences = await ctx.db.query("conferences").collect();
 
     return conferences
-      .filter((conference) => !conference.isDemoData)
+      .filter((conference) => !conference.isDemoData && conference.frozen !== true)
       .filter(
         (conference) => args.agendaUrl === undefined || conference.agendaUrl === args.agendaUrl,
       )

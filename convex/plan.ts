@@ -12,10 +12,12 @@ import {
 import { loadOptimizerInput, loadPlanningInput } from "./model/loadOptimizerInput";
 import { naturalAssignments } from "./model/naturalPlan";
 import type { AssignmentSummary } from "./model/types";
+import { assertWritable } from "./model/frozenConference";
 
 export const optimize = mutation({
   args: { conferenceId: v.id("conferences") },
   handler: async (ctx, args) => {
+    await assertWritable(ctx, args.conferenceId);
     const conference = await ctx.db.get(args.conferenceId);
 
     if (conference === null) {
@@ -159,6 +161,7 @@ export const coverage = query({
 export const naturalPlan = mutation({
   args: { conferenceId: v.id("conferences") },
   handler: async (ctx, args) => {
+    await assertWritable(ctx, args.conferenceId);
     const conference = await ctx.db.get(args.conferenceId);
 
     if (conference === null) {
@@ -194,6 +197,7 @@ export const naturalPlan = mutation({
 export const repair = mutation({
   args: { conferenceId: v.id("conferences") },
   handler: async (ctx, args) => {
+    await assertWritable(ctx, args.conferenceId);
     const conference = await ctx.db.get(args.conferenceId);
 
     if (conference === null) {

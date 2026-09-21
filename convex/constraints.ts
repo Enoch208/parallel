@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
+import { assertWritable } from "./model/frozenConference";
 
 export async function bumpConstraintRevision(
   ctx: MutationCtx,
@@ -28,6 +29,7 @@ export const applyAvailabilityBlock = mutation({
     sourceQuote: v.union(v.string(), v.null()),
   },
   handler: async (ctx, args) => {
+    await assertWritable(ctx, args.conferenceId);
     if (args.endsAt <= args.startsAt) {
       throw new Error("A block must end after it starts");
     }
@@ -69,6 +71,8 @@ export const releaseAvailabilityBlock = mutation({
     if (block === null) {
       return { removed: false };
     }
+
+    await assertWritable(ctx, block.conferenceId);
 
     await ctx.db.delete(args.blockId);
     const revision = await bumpConstraintRevision(ctx, block.conferenceId);

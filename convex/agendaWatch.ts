@@ -13,6 +13,8 @@ import {
   type SessionChange,
 } from "./model/agendaDiff";
 import { sliceForDay } from "./model/agendaSlice";
+import { assertWritable } from "./model/frozenConference";
+import { assertWritableFromAction } from "./frozen";
 
 export const currentAgenda = internalQuery({
   args: { conferenceId: v.id("conferences") },
@@ -68,6 +70,7 @@ export const recordDetectedChange = internalMutation({
 export const previewChanges = action({
   args: { conferenceId: v.id("conferences") },
   handler: async (ctx, args): Promise<{ changes: SessionChange[]; unchanged: number }> => {
+    await assertWritableFromAction(ctx, args.conferenceId);
     const firecrawlKey = process.env.FIRECRAWL_API_KEY;
     const openaiKey = process.env.OPENAI_API_KEY;
 
@@ -137,6 +140,7 @@ export const confirmAgendaChanges = mutation({
     ),
   },
   handler: async (ctx, args) => {
+    await assertWritable(ctx, args.conferenceId);
     const conference = await ctx.db.get(args.conferenceId);
 
     if (conference === null) {
@@ -264,6 +268,7 @@ export const detectAgendaChange = action({
     affectedAssignments: number;
     preserved: number;
   }> => {
+    await assertWritableFromAction(ctx, args.conferenceId);
     const firecrawlKey = process.env.FIRECRAWL_API_KEY;
     const openaiKey = process.env.OPENAI_API_KEY;
 

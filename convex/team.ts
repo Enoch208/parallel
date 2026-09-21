@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation } from "./_generated/server";
 import { bumpConstraintRevision } from "./constraints";
+import { assertWritable } from "./model/frozenConference";
 
 const stance = v.union(v.literal("interested"), v.literal("avoid"), v.literal("pinned"));
 
@@ -12,6 +13,7 @@ export const addTeammate = mutation({
     isLead: v.boolean(),
   },
   handler: async (ctx, args) => {
+    await assertWritable(ctx, args.conferenceId);
     if (args.displayName.trim().length === 0) {
       throw new Error("A teammate needs a name");
     }
@@ -53,6 +55,7 @@ export const addTeammate = mutation({
 export const addGoal = mutation({
   args: { conferenceId: v.id("conferences"), label: v.string(), weight: v.number() },
   handler: async (ctx, args) => {
+    await assertWritable(ctx, args.conferenceId);
     if (args.label.trim().length === 0) {
       throw new Error("A goal needs a label");
     }
@@ -81,6 +84,7 @@ export const setPreference = mutation({
     stance,
   },
   handler: async (ctx, args) => {
+    await assertWritable(ctx, args.conferenceId);
     const existing = await ctx.db
       .query("memberPreferences")
       .withIndex("by_member", (q) =>
@@ -114,6 +118,7 @@ export const clearPreference = mutation({
     sessionId: v.id("sessions"),
   },
   handler: async (ctx, args) => {
+    await assertWritable(ctx, args.conferenceId);
     const existing = await ctx.db
       .query("memberPreferences")
       .withIndex("by_member", (q) =>

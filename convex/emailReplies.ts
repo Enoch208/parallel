@@ -1,5 +1,11 @@
-import { v } from "convex/values";
-import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import { ConvexError, v } from "convex/values";
+import {
+  internalAction,
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
@@ -18,6 +24,7 @@ import {
   declineCoverRequest,
   openCoverRequestsFor,
 } from "./model/coverAcceptance";
+import { assertWritable, isFrozen } from "./model/frozenConference";
 
 export const pendingReplies = query({
   args: { conferenceId: v.id("conferences") },
@@ -86,6 +93,10 @@ export const resolveCoverReply = internalMutation({
 
     if (event === null || event.conferenceId === null || event.membershipId === null) {
       return { handled: false, reason: "unmatched" as const };
+    }
+
+    if (await isFrozen(ctx, event.conferenceId)) {
+      return { handled: false, reason: "frozen" as const };
     }
 
     await ctx.db.patch(args.eventId, {
@@ -242,17 +253,19 @@ export const resolveByHand = mutation({
     const event = await ctx.db.get(args.eventId);
 
     if (event === null || event.conferenceId === null || event.membershipId === null) {
-      throw new Error("That reply is not tied to a teammate on a conference");
+      throw new ConvexError("That reply is not tied to a teammate on a conference");
     }
 
+    await assertWritable(ctx, event.conferenceId);
+
     if (event.handled) {
-      throw new Error("That reply has already been applied");
+      throw new ConvexError("That reply has already been applied");
     }
 
     const session = await ctx.db.get(args.sessionId);
 
     if (session === null || session.conferenceId !== event.conferenceId) {
-      throw new Error("That session is not on this conference agenda");
+      throw new ConvexError("That session is not on this conference agenda");
     }
 
     const outcome = await applyReplyToSession(ctx, {
@@ -266,13 +279,13 @@ export const resolveByHand = mutation({
     });
 
     if (outcome.reason === "empty_takeaway") {
-      throw new Error(
+      throw new ConvexError(
         "That reply names the session but says nothing about it, so there is no takeaway to file",
       );
     }
 
     if (!outcome.applied) {
-      throw new Error("That session could not be resolved");
+      throw new ConvexError("That session could not be resolved");
     }
 
     await ctx.db.patch(args.eventId, {
@@ -300,6 +313,10 @@ export const applyParsedReply = internalMutation({
 
     if (event === null || event.conferenceId === null || event.membershipId === null) {
       return { applied: false, reason: "unmatched" as const };
+    }
+
+    if (await isFrozen(ctx, event.conferenceId)) {
+      return { applied: false, reason: "frozen" as const };
     }
 
     const parsed = { intent: args.intent, confidence: args.confidence, quote: args.quote };
@@ -333,7 +350,7 @@ export interface ParseAndApplyResult {
   readonly reason: string | null;
 }
 
-export const parseAndApply = action({
+export const parseAndApply = internalAction({
   args: { eventId: v.id("emailEvents") },
   handler: async (ctx, args): Promise<ParseAndApplyResult> => {
     const apiKey = process.env.OPENAI_API_KEY;

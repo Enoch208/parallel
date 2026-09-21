@@ -45,6 +45,7 @@ import type * as engine_types from "../engine/types.js";
 import type * as evidence from "../evidence.js";
 import type * as explain from "../explain.js";
 import type * as firecrawlJobs from "../firecrawlJobs.js";
+import type * as frozen from "../frozen.js";
 import type * as guest from "../guest.js";
 import type * as http from "../http.js";
 import type * as importAgenda from "../importAgenda.js";
@@ -62,8 +63,10 @@ import type * as model_coverRanking from "../model/coverRanking.js";
 import type * as model_demoFixture from "../model/demoFixture.js";
 import type * as model_firecrawlClient from "../model/firecrawlClient.js";
 import type * as model_firecrawlComponent from "../model/firecrawlComponent.js";
+import type * as model_frozenConference from "../model/frozenConference.js";
 import type * as model_loadCoverInput from "../model/loadCoverInput.js";
 import type * as model_loadOptimizerInput from "../model/loadOptimizerInput.js";
+import type * as model_loadTripSummary from "../model/loadTripSummary.js";
 import type * as model_monitorPayload from "../model/monitorPayload.js";
 import type * as model_naturalPlan from "../model/naturalPlan.js";
 import type * as model_openaiClient from "../model/openaiClient.js";
@@ -88,6 +91,7 @@ import type * as scoring from "../scoring.js";
 import type * as scoringReuse from "../scoringReuse.js";
 import type * as team from "../team.js";
 import type * as uncovered from "../uncovered.js";
+import type * as verifiedRun from "../verifiedRun.js";
 
 import type {
   ApiFromModules,
@@ -133,6 +137,7 @@ declare const fullApi: ApiFromModules<{
   evidence: typeof evidence;
   explain: typeof explain;
   firecrawlJobs: typeof firecrawlJobs;
+  frozen: typeof frozen;
   guest: typeof guest;
   http: typeof http;
   importAgenda: typeof importAgenda;
@@ -150,8 +155,10 @@ declare const fullApi: ApiFromModules<{
   "model/demoFixture": typeof model_demoFixture;
   "model/firecrawlClient": typeof model_firecrawlClient;
   "model/firecrawlComponent": typeof model_firecrawlComponent;
+  "model/frozenConference": typeof model_frozenConference;
   "model/loadCoverInput": typeof model_loadCoverInput;
   "model/loadOptimizerInput": typeof model_loadOptimizerInput;
+  "model/loadTripSummary": typeof model_loadTripSummary;
   "model/monitorPayload": typeof model_monitorPayload;
   "model/naturalPlan": typeof model_naturalPlan;
   "model/openaiClient": typeof model_openaiClient;
@@ -176,6 +183,7 @@ declare const fullApi: ApiFromModules<{
   scoringReuse: typeof scoringReuse;
   team: typeof team;
   uncovered: typeof uncovered;
+  verifiedRun: typeof verifiedRun;
 }>;
 
 /**

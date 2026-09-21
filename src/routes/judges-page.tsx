@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAction } from "convex/react";
+import { useAction, useQuery } from "convex/react";
 import { Link } from "react-router";
 import { api } from "@convex/_generated/api";
 import type { JudgeRun } from "@convex/judges";
@@ -8,12 +8,18 @@ import { PageHeading } from "@/components/chrome/page-heading";
 import { JudgeStepList } from "@/components/judges/judge-step-list";
 import { JudgeCoverCard } from "@/components/judges/judge-cover-card";
 import { ReliabilityPanel } from "@/components/judges/reliability-panel";
+import { ImpactRow } from "@/components/judges/impact-row";
+import { SponsorFlow } from "@/components/judges/sponsor-flow";
 import { errorMessage } from "@/components/setup/setup-shell";
 import { useDemoConference } from "@/lib/use-demo-conference";
 import { appRoutes } from "@/lib/routes";
+import { verifiedRunConferenceId, verifiedRunHref } from "@/lib/verified-run";
 
 export function JudgesPage() {
   const runDemo = useAction(api.judges.runDemo);
+  const verified = useQuery(api.verifiedRun.verifiedRun, {
+    conferenceId: verifiedRunConferenceId,
+  });
   const { remember } = useDemoConference();
   const [run, setRun] = useState<JudgeRun | null>(null);
   const [busy, setBusy] = useState(false);
@@ -39,20 +45,35 @@ export function JudgesPage() {
       <AppHeader title="Judges" context="One click, the whole loop" />
       <PageHeading
         title="See it work in 90 seconds"
-        description="Runs the real engine on a fresh workspace of its own. Nothing here is scripted; every number below is computed as it happens."
+        description="See it work on a fresh workspace of your own, inspect the verified production run, then try to break it. Nothing here is scripted; every number is computed from stored rows as you watch."
       />
 
       <div className="flex flex-col gap-6">
-        <button
-          type="button"
-          onClick={() => {
-            void start();
-          }}
-          disabled={busy}
-          className="w-fit rounded-full bg-white px-7 py-3 text-sm font-medium text-black transition-colors hover:bg-gray-200 disabled:opacity-60"
-        >
-          {busy ? "Running the loop…" : "Run the demo"}
-        </button>
+        {verified !== undefined && verified !== null && <ImpactRow run={verified} />}
+
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              void start();
+            }}
+            disabled={busy}
+            className="w-fit rounded-full bg-white px-7 py-3 text-sm font-medium text-black transition-colors hover:bg-gray-200 disabled:opacity-60"
+          >
+            {busy ? "Running the loop…" : "Run the demo"}
+          </button>
+
+          {verified !== undefined && verified !== null && (
+            <Link
+              to={verifiedRunHref}
+              className="w-fit rounded-full border border-white/10 bg-white/[0.04] px-7 py-3 text-sm font-medium text-white transition-colors hover:bg-white/[0.08]"
+            >
+              Open verified production run
+            </Link>
+          )}
+        </div>
+
+        <SponsorFlow />
 
         {error !== null && (
           <p role="alert" className="text-sm text-amber-200">

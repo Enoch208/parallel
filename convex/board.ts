@@ -13,6 +13,7 @@ export interface ConferenceHeader {
   readonly timezone: string;
   readonly constraintRevision: number;
   readonly isDemoData: boolean;
+  readonly frozen: boolean;
 }
 
 export interface TeamMemberSummary {
@@ -112,6 +113,7 @@ export const conferenceOverview = query({
         timezone: conference.timezone,
         constraintRevision: conference.constraintRevision,
         isDemoData: conference.isDemoData,
+        frozen: conference.frozen === true,
       },
       goals: goals.map(toGoalSummary),
       members: members.map(toMemberSummary),

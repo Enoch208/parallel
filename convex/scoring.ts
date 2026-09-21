@@ -14,6 +14,7 @@ import {
   scoringSystemPrompt,
 } from "./model/scoringSchema";
 import type { ScoringGoal, ScoringSession } from "./model/scoringSchema";
+import { assertWritableFromAction } from "./frozen";
 
 const sessionsPerCall = 4;
 
@@ -216,6 +217,7 @@ function requireOpenAiKey(): string {
 export const scoreConference = action({
   args: { conferenceId: v.id("conferences") },
   handler: async (ctx, args): Promise<ScoreConferenceResult> => {
+    await assertWritableFromAction(ctx, args.conferenceId);
     const apiKey = requireOpenAiKey();
 
     const targets: ScoringTargets = await ctx.runQuery(internal.scoring.loadScoringTargets, {

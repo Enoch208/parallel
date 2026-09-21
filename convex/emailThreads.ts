@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation } from "./_generated/server";
+import { assertWritable } from "./model/frozenConference";
 
 export const createThread = mutation({
   args: {
@@ -8,6 +9,7 @@ export const createThread = mutation({
     token: v.string(),
   },
   handler: async (ctx, args) => {
+    await assertWritable(ctx, args.conferenceId);
     const existing = await ctx.db
       .query("emailThreads")
       .withIndex("by_token", (q) => q.eq("token", args.token))

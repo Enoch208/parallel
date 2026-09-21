@@ -8,8 +8,10 @@ import { PageHeading } from "@/components/chrome/page-heading";
 import { ActivityFeed } from "@/components/board/activity-feed";
 import { BoardView, type BoardLane } from "@/components/board/board-view";
 import { CoverCard } from "@/components/board/cover-card";
+import { FrozenBanner } from "@/components/board/frozen-banner";
 import type { LaneCard } from "@/components/board/lane-column";
 import type { CardState } from "@/components/board/session-card";
+import { errorMessage } from "@/components/setup/setup-shell";
 import { useDemoConference } from "@/lib/use-demo-conference";
 
 export function BoardPage() {
@@ -23,6 +25,17 @@ export function BoardPage() {
   const repair = useMutation(api.plan.repair);
   const release = useMutation(api.assignments.release);
   const [repairing, setRepairing] = useState(false);
+  const [writeError, setWriteError] = useState<string | null>(null);
+
+  const attempt = async (write: () => Promise<unknown>) => {
+    setWriteError(null);
+
+    try {
+      await write();
+    } catch (error) {
+      setWriteError(errorMessage(error));
+    }
+  };
 
   const id = conferenceId === null ? null : (conferenceId as Id<"conferences">);
   const overview = useQuery(
@@ -65,42 +78,32 @@ export function BoardPage() {
   const runOptimize = async () => {
     if (id === null) return;
     setOptimizing(true);
-    try {
-      await optimize({ conferenceId: id });
-    } finally {
-      setOptimizing(false);
-    }
+    await attempt(() => optimize({ conferenceId: id }));
+    setOptimizing(false);
   };
 
   const runRepair = async () => {
     if (id === null) return;
     setRepairing(true);
-    try {
-      await repair({ conferenceId: id });
-    } finally {
-      setRepairing(false);
-    }
+    await attempt(() => repair({ conferenceId: id }));
+    setRepairing(false);
   };
 
   const askCover = async () => {
     if (id === null || firstDropped === null || firstDropped === undefined) return;
     if (firstDropped.droppedBy === null) return;
 
+    const droppedBy = firstDropped.droppedBy;
+    const sessionId = firstDropped.sessionId;
     setAsking(true);
-
-    try {
-      const proposal = await proposeCover({
-        conferenceId: id,
-        sessionId: firstDropped.sessionId,
-        fromMember: firstDropped.droppedBy,
-      });
+    await attempt(async () => {
+      const proposal = await proposeCover({ conferenceId: id, sessionId, fromMember: droppedBy });
 
       if (proposal.requestId !== null) {
         await sendCoverRequest({ requestId: proposal.requestId });
       }
-    } finally {
-      setAsking(false);
-    }
+    });
+    setAsking(false);
   };
 
   const runClaim = async (membershipId: string, sessionId: string) => {
@@ -108,12 +111,14 @@ export function BoardPage() {
       return;
     }
 
-    await claim({
-      planId: plan.id as Id<"plans">,
-      sessionId: sessionId as Id<"sessions">,
-      membershipId: membershipId as Id<"memberships">,
-      expectedRevision: plan.conferenceRevision,
-    });
+    await attempt(() =>
+      claim({
+        planId: plan.id as Id<"plans">,
+        sessionId: sessionId as Id<"sessions">,
+        membershipId: membershipId as Id<"memberships">,
+        expectedRevision: plan.conferenceRevision,
+      }),
+    );
   };
 
   const runRelease = async (membershipId: string, sessionId: string) => {
@@ -121,12 +126,14 @@ export function BoardPage() {
       return;
     }
 
-    await release({
-      planId: plan.id as Id<"plans">,
-      sessionId: sessionId as Id<"sessions">,
-      membershipId: membershipId as Id<"memberships">,
-      expectedRevision: plan.conferenceRevision,
-    });
+    await attempt(() =>
+      release({
+        planId: plan.id as Id<"plans">,
+        sessionId: sessionId as Id<"sessions">,
+        membershipId: membershipId as Id<"memberships">,
+        expectedRevision: plan.conferenceRevision,
+      }),
+    );
   };
 
   if (id === null) {
@@ -240,6 +247,12 @@ export function BoardPage() {
             : "One lane per teammate."
         }
       />
+      {overview.conference.frozen && <FrozenBanner />}
+      {writeError !== null && (
+        <p role="alert" className="mb-4 text-sm text-red-200">
+          {writeError}
+        </p>
+      )}
       <BoardView
         lanes={lanes}
         coverage={coverage ?? null}

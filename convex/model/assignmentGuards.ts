@@ -1,11 +1,13 @@
+import { ConvexError } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { overlaps } from "../engine";
+import { frozenMessage } from "./frozenConference";
 
-export class StaleRevisionError extends Error {}
+export class StaleRevisionError extends ConvexError<string> {}
 export type ConflictKind = "unavailable" | "overlap";
 
-export class ConflictError extends Error {
+export class ConflictError extends ConvexError<string> {
   readonly kind: ConflictKind;
 
   constructor(kind: ConflictKind, message: string) {
@@ -34,6 +36,10 @@ export async function requireCurrentPlan(
 
   if (conference === null) {
     throw new Error("Conference not found");
+  }
+
+  if (conference.frozen === true) {
+    throw new ConvexError(frozenMessage);
   }
 
   if (expectedRevision !== null && conference.constraintRevision !== expectedRevision) {
