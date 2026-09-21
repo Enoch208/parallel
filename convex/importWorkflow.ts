@@ -18,6 +18,7 @@ import { sliceForDay } from "./model/agendaSlice";
 import { zonedTimeToEpoch } from "./model/zonedTime";
 import { assertConferenceTimezone } from "./model/timezone";
 import { importWorkflows, scoringPool } from "./model/workpools";
+import { assessScoring, describeScoring } from "./model/scoringCompleteness";
 
 const scoringFinishedEvent = "importScoringFinished";
 
@@ -29,6 +30,8 @@ const importRunSummary = v.object({
   validated: v.number(),
   inserted: v.number(),
   scoredPairs: v.number(),
+  expectedPairs: v.number(),
+  scoringComplete: v.boolean(),
 });
 
 export type ImportRunSummary = Infer<typeof importRunSummary>;
@@ -285,6 +288,8 @@ export const runImport = importWorkflows.define({
         validated: normalized.sessions.length,
         inserted,
         scoredPairs: 0,
+        expectedPairs: 0,
+        scoringComplete: false,
       };
     }
 
@@ -295,18 +300,45 @@ export const runImport = importWorkflows.define({
     );
     await step.awaitEvent({ name: scoringFinishedEvent });
 
-    const scored = await step.runQuery(
+    let scored = await step.runQuery(
       internal.importWorkflow.conferenceCounts,
       { conferenceId },
       { name: "count scored pairs" },
     );
+    const firstPass = assessScoring(scored);
+
+    if (!firstPass.complete) {
+      await step.runMutation(
+        internal.importWorkflow.enqueueScoring,
+        { conferenceId, workflowId: step.workflowId },
+        { name: "rescore missing pairs" },
+      );
+      await step.awaitEvent({ name: scoringFinishedEvent });
+      scored = await step.runQuery(
+        internal.importWorkflow.conferenceCounts,
+        { conferenceId },
+        { name: "recount scored pairs" },
+      );
+    }
+
+    const outcome = assessScoring(scored);
+
+    await step.runMutation(internal.importWrites.recordActivity, {
+      conferenceId,
+      kind: outcome.complete ? "scoring_complete" : "scoring_incomplete",
+      sponsor: "openai",
+      durationMs: 0,
+      summary: describeScoring(outcome, !firstPass.complete),
+    });
 
     return {
       characters: page.characters,
       extracted: normalized.extracted,
       validated: normalized.sessions.length,
       inserted,
-      scoredPairs: scored.scoredPairs,
+      scoredPairs: outcome.scoredPairs,
+      expectedPairs: outcome.expectedPairs,
+      scoringComplete: outcome.complete,
     };
   },
 });
