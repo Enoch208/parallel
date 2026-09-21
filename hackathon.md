@@ -13,8 +13,10 @@ come back as ordinary replies.
 
 ## The verified production run
 
-**[Open the real plan](https://joyous-akita-768.convex.site/board?c=js711hd3g819z5kw11bv8ntqm58erbt5)** — one
-permanent workspace on production holding a complete run. Nothing in it is seeded.
+**[Open the real plan](https://joyous-akita-768.convex.site/board?c=js711hd3g819z5kw11bv8ntqm58erbt5)** — a
+permanent production workspace created through the real application flow, using the public ViVE
+2026 agenda. The conference scenario itself was played out for verification. The workspace is
+read-only: every change from the app is refused, so the record stays exactly as it happened.
 
 - The agenda is the public [ViVE 2026 agenda](https://www.viveevent.com/agenda/), scraped by
   Firecrawl and stored with its fetch time and content hash. Unofficial, and not affiliated with
@@ -52,12 +54,16 @@ hiding it.
 
 ## Judge path, 60 seconds
 
-1. Open **[/judges](https://joyous-akita-768.convex.site/judges)** and press **Run the demo**. It
+1. Open **[/judges](https://joyous-akita-768.convex.site/judges)**. The top row reads the verified
+   production run live: Team Goal Coverage for the same teammates each planning only for
+   themselves, a computed baseline rather than observed behaviour, against the coordinated plan.
+   Press **Run the demo**. It
    runs the real engine on a workspace of your own and shows five steps with the numbers computed
    as they happen: everyone planning alone, the optimizer splitting the team, a teammate replying
    that they cannot make a session, the repair moving only that person, and the best-placed
    cover candidate being proposed. The reply is simulated and this path sends no email.
 2. Press **Open this workspace on the board** to land on the live board for that same workspace.
+   **Open verified production run**, beside **Run the demo**, opens the real run instead.
 3. Open **How Parallel worked** at the bottom of the board to see which service did what, and how
    long each step took.
 4. Open a second tab on the same board. Press **Release** on a card in one tab and watch the other
@@ -173,7 +179,7 @@ exactly as a k-track interval scheduling problem rather than estimated.
 The engine is verified by randomized property testing rather than a handful of fixtures: generated
 instances checked for hard-constraint violations, exact-versus-brute-force comparisons with zero
 disagreements, and determinism checked by running the same instance twice and by reversing input
-order. **47 test files, 357 tests, passing locally and in GitHub Actions on 21 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
+order. **49 test files, 366 tests, passing locally and in GitHub Actions on 21 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
 excluding proposed cover that has not been accepted. The tests found that beam search alone is genuinely
 suboptimal on a measurable share of instances, which is why the exact mode exists.
 

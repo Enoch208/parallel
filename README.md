@@ -15,7 +15,8 @@ https://github.com/user-attachments/assets/19891333-4520-40de-a375-207f92427ae2
 - **Judge path:** [`/judges`](https://joyous-akita-768.convex.site/judges) runs the whole loop on a
   workspace of your own, then lets you try to break it
 - **Verified real run:**
-  [the production board](https://joyous-akita-768.convex.site/board?c=js711hd3g819z5kw11bv8ntqm58erbt5)
+  [the production board](https://joyous-akita-768.convex.site/board?c=js711hd3g819z5kw11bv8ntqm58erbt5),
+  also one click from `/judges`
 - **Submission notes:** [`hackathon.md`](hackathon.md)
 
 ---
@@ -77,7 +78,7 @@ flowchart LR
     E --> F["Replies<br/>can't make it · pin · takeaway"]
     F --> G{"Changes the plan?"}
     G -- "yes" --> H["Plan goes stale<br/>on every screen"]
-    H --> I["Repair<br/>fewest people moved"]
+    H --> I["Repair<br/>keeps what stays feasible"]
     I --> J["Cover request<br/>YES / NO by email"]
     J --> D
     G -- "takeaway" --> K["Note filed<br/>against the session"]
@@ -102,8 +103,9 @@ flowchart LR
 5. **Handle real life by email.** A teammate replies in their own words: _"I can't make the 11:30
    workshop."_ The reply is verified, parsed, matched to a session and applied as an availability
    block. The constraint revision moves, and every open board turns stale at once.
-6. **Repair, then ask for cover.** Repair keeps every assignment that still works and moves as few
-   people as possible. If a session is left open, Parallel ranks who should cover it, shows the
+6. **Repair, then ask for cover.** Repair preserves existing assignments that remain feasible,
+   while a separate minimum-disruption analysis computes the minimum set of teammates whose
+   schedules must change. If a session is left open, Parallel ranks who should cover it, shows the
    arithmetic for why, and emails that person. They reply **YES** or **NO**.
 7. **Bring the learning home.** Teammates reply with what they took from a session. Each takeaway
    is filed against the right session, the lead can reject any of them, and OpenAI writes a brief
@@ -240,7 +242,7 @@ sequenceDiagram
     P->>DB: Availability block with the sentence, revision +1
     DB-->>B: Plan is stale, shown in amber with a text label
     Note over B: The lead presses Repair
-    B->>DB: Repair keeps what still works, moves the fewest people
+    B->>DB: Repair keeps feasible assignments, analysis names who must change
     DB->>AM: Cover request to the best-placed teammate
     AM->>T: Can you cover this session?
     T->>AM: YES
@@ -388,24 +390,26 @@ Each of these is enforced in code and covered by tests. The first four can be at
 **Try to break it** on `/judges`, which runs them through the production code on a throwaway
 workspace and deletes it afterwards.
 
-| Guarantee                                                  | How                                                                                          | Where                                                  |
-| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| A webhook delivered twice is stored once                   | Events are keyed by the provider's event id                                                  | `convex/emailIngest.ts`                                |
-| A browser holding an old plan cannot overwrite a newer one | Revision re-read at write time                                                               | `convex/model/assignmentGuards.ts`                     |
-| A paraphrased model quote is never acted on                | Verbatim substring check before anything is applied                                          | `convex/model/replySchema.ts`                          |
-| A retried send never delivers twice                        | Idempotency key on kind, teammate and revision, checked in a ledger before the provider call | `convex/emailSendWrites.ts`                            |
-| A send loop cannot drain the inbox                         | Rolling 24-hour budget of 80 sends                                                           | `convex/emailSend.ts`                                  |
-| An ambiguous reply is never guessed                        | Session matching requires exactly one candidate                                              | `convex/model/sessionMatch.ts`                         |
-| An empty takeaway never reaches the brief                  | A takeaway needs at least four words beyond the session title; rejected notes are excluded   | `convex/model/takeawaySubstance.ts`, `convex/brief.ts` |
-| A cancelled session is never assigned                      | Planning input drops it; repair drops assignments that pointed at it                         | `convex/model/loadOptimizerInput.ts`                   |
-| Nobody else's day changes without consent                  | New assignments for others only through an accepted cover request                            | `convex/model/coverAcceptance.ts`                      |
-| A guest's clicks never touch another visitor's board       | Each guest gets a workspace of their own, removed after 24 hours                             | `convex/guest.ts`                                      |
+| Guarantee                                                  | How                                                                                                 | Where                                                  |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| A webhook delivered twice is stored once                   | Events are keyed by the provider's event id                                                         | `convex/emailIngest.ts`                                |
+| A browser holding an old plan cannot overwrite a newer one | Revision re-read at write time                                                                      | `convex/model/assignmentGuards.ts`                     |
+| A paraphrased model quote is never acted on                | Verbatim substring check before anything is applied                                                 | `convex/model/replySchema.ts`                          |
+| A retried send never delivers twice                        | Idempotency key on kind, teammate and revision, checked in a ledger before the provider call        | `convex/emailSendWrites.ts`                            |
+| A send loop cannot drain the inbox                         | Rolling 24-hour budget of 80 sends                                                                  | `convex/emailSend.ts`                                  |
+| An ambiguous reply is never guessed                        | Session matching requires exactly one candidate                                                     | `convex/model/sessionMatch.ts`                         |
+| An empty takeaway never reaches the brief                  | A takeaway needs at least four words beyond the session title; rejected notes are excluded          | `convex/model/takeawaySubstance.ts`, `convex/brief.ts` |
+| A cancelled session is never assigned                      | Planning input drops it; repair drops assignments that pointed at it                                | `convex/model/loadOptimizerInput.ts`                   |
+| Nobody else's day changes without consent                  | New assignments for others only through an accepted cover request                                   | `convex/model/coverAcceptance.ts`                      |
+| The verified run cannot drift                              | A frozen workspace refuses every write from the app, and inbound replies are stored but not applied | `convex/model/frozenConference.ts`                     |
+| A guest's clicks never touch another visitor's board       | Each guest gets a workspace of their own, removed after 24 hours                                    | `convex/guest.ts`                                      |
 
 ## The verified production run
 
-One permanent workspace on production holds a complete run on the public
+A permanent production workspace created through the real application flow, using the public
 [ViVE 2026 agenda](https://www.viveevent.com/agenda/). Parallel is unofficial and not affiliated
-with the event. Nothing in the workspace is seeded.
+with the event. The conference scenario itself was played out for verification. The workspace is
+read-only: every change from the app is refused, so the record stays exactly as it happened.
 
 | Step                                             | Measured on production                                                |
 | ------------------------------------------------ | --------------------------------------------------------------------- |
@@ -429,16 +433,16 @@ than hiding it.
 
 ## Screens
 
-| Route       | What it is for                                                                                                               |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `/`         | The landing page                                                                                                             |
-| `/board`    | One lane per teammate, the three counters, Optimize, Repair, claim and release by hand, and _How Parallel worked_            |
-| `/agenda`   | Import a public agenda and watch the workflow's current step                                                                 |
-| `/goals`    | The team's weighted goals and every session's score against them                                                             |
-| `/notes`    | Takeaways, with approve and reject                                                                                           |
-| `/brief`    | What the trip returned, the brief itself, its recipients and **Send the brief**                                              |
-| `/evidence` | Every number traced to its row: the page it was scraped from, the reason the optimizer stored, the sentence a teammate wrote |
-| `/judges`   | **Run the demo** on a workspace of your own, and **Try to break it**                                                         |
+| Route       | What it is for                                                                                                                             |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/`         | The landing page                                                                                                                           |
+| `/board`    | One lane per teammate, the three counters, Optimize, Repair, claim and release by hand, and _How Parallel worked_                          |
+| `/agenda`   | Import a public agenda and watch the workflow's current step                                                                               |
+| `/goals`    | The team's weighted goals and every session's score against them                                                                           |
+| `/notes`    | Takeaways, with approve and reject                                                                                                         |
+| `/brief`    | What the trip returned, the brief itself, its recipients and **Send the brief**                                                            |
+| `/evidence` | Every number traced to its row: the page it was scraped from, the reason the optimizer stored, the sentence a teammate wrote               |
+| `/judges`   | The verified run's measured impact, **Run the demo** on a workspace of your own, **Open verified production run**, and **Try to break it** |
 
 Any screen accepts `?c=<conference id>` to open a specific workspace, which is how the production
 run above is linked. Seeded demo workspaces are labelled as demo data on screen, and _How Parallel
@@ -562,7 +566,7 @@ minutes as sessions end, and guest workspaces older than 24 hours are removed ev
 
 ## Testing
 
-**47 test files and 357 tests**, run on every push in GitHub Actions.
+**49 test files and 366 tests**, run on every push in GitHub Actions.
 
 | Folder               | What it covers                                                                                                                                     |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
