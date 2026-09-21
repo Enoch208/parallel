@@ -9,7 +9,7 @@ import {
   repairPlan,
   repairWithMinimumDisruption,
 } from "./engine";
-import { loadOptimizerInput } from "./model/loadOptimizerInput";
+import { loadOptimizerInput, loadPlanningInput } from "./model/loadOptimizerInput";
 import { naturalAssignments } from "./model/naturalPlan";
 import type { AssignmentSummary } from "./model/types";
 
@@ -22,7 +22,7 @@ export const optimize = mutation({
       throw new Error("Conference not found");
     }
 
-    const input = await loadOptimizerInput(ctx, args.conferenceId, conference.agendaUrl);
+    const input = await loadPlanningInput(ctx, args.conferenceId, conference.agendaUrl);
     const outcome = optimizePlanWithProof(input);
 
     const planId = await ctx.db.insert("plans", {
@@ -165,7 +165,7 @@ export const naturalPlan = mutation({
       throw new Error("Conference not found");
     }
 
-    const input = await loadOptimizerInput(ctx, args.conferenceId, conference.agendaUrl);
+    const input = await loadPlanningInput(ctx, args.conferenceId, conference.agendaUrl);
     const assignments = naturalAssignments(input);
 
     const planId = await ctx.db.insert("plans", {
@@ -206,13 +206,17 @@ export const repair = mutation({
       throw new Error("There is no plan to repair");
     }
 
-    const input = await loadOptimizerInput(ctx, args.conferenceId, conference.agendaUrl);
-    const disruption = repairWithMinimumDisruption(input, previous.assignments);
-    const proposed = repairPlan(input, previous.assignments);
-    const outcome = withoutUnconsentedMoves(proposed, previous.assignments);
+    const input = await loadPlanningInput(ctx, args.conferenceId, conference.agendaUrl);
+    const stillOnAgenda = new Set(input.sessions.map((session) => session.id));
+    const surviving = previous.assignments.filter((assignment) =>
+      stillOnAgenda.has(assignment.sessionId),
+    );
+    const disruption = repairWithMinimumDisruption(input, surviving);
+    const proposed = repairPlan(input, surviving);
+    const outcome = withoutUnconsentedMoves(proposed, surviving);
     const moved =
       outcome.kind === "plan"
-        ? countMovedAssignments(input.sessions, previous.assignments, outcome.assignments)
+        ? countMovedAssignments(input.sessions, surviving, outcome.assignments)
         : 0;
 
     const planId = await ctx.db.insert("plans", {

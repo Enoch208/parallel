@@ -197,7 +197,13 @@ export function BoardPage() {
         }
 
         const shared = (perSession.get(assignment.sessionId) ?? 0) > 1;
-        const state: CardState = assignment.pinned ? "pinned" : shared ? "duplicate" : "assigned";
+        const state: CardState = session.cancelled
+          ? "cancelled"
+          : assignment.pinned
+            ? "pinned"
+            : shared
+              ? "duplicate"
+              : "assigned";
 
         return [{ session, state, reason: assignment.reason }];
       })
@@ -205,7 +211,7 @@ export function BoardPage() {
 
     const taken = new Set(cards.map((card) => card.session.id));
     const claimable = sessions.filter((session) => {
-      if (taken.has(session.id)) {
+      if (taken.has(session.id) || session.cancelled) {
         return false;
       }
 

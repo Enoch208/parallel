@@ -82,3 +82,40 @@ export async function loadOptimizerInput(
     })),
   };
 }
+
+export function withoutSessions(
+  input: OptimizerInput,
+  dropped: ReadonlySet<string>,
+): OptimizerInput {
+  if (dropped.size === 0) {
+    return input;
+  }
+
+  return {
+    ...input,
+    sessions: input.sessions.filter((session) => !dropped.has(session.id)),
+    scores: input.scores.filter((score) => !dropped.has(score.sessionId)),
+    preferences: input.preferences.filter((preference) => !dropped.has(preference.sessionId)),
+  };
+}
+
+async function cancelledSessionIds(
+  ctx: QueryCtx,
+  conferenceId: Id<"conferences">,
+): Promise<ReadonlySet<string>> {
+  const rows = await ctx.db
+    .query("sessions")
+    .withIndex("by_conference", (q) => q.eq("conferenceId", conferenceId))
+    .collect();
+
+  return new Set(rows.filter((row) => row.cancelledAt !== undefined).map((row) => row._id));
+}
+
+export async function loadPlanningInput(
+  ctx: QueryCtx,
+  conferenceId: Id<"conferences">,
+  agendaUrl: string,
+): Promise<OptimizerInput> {
+  const input = await loadOptimizerInput(ctx, conferenceId, agendaUrl);
+  return withoutSessions(input, await cancelledSessionIds(ctx, conferenceId));
+}

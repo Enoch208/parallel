@@ -119,9 +119,13 @@ export const conferenceOverview = query({
   },
 });
 
+export interface BoardSession extends SessionSummary {
+  readonly cancelled: boolean;
+}
+
 export const conferenceSessions = query({
   args: { conferenceId: v.id("conferences") },
-  handler: async (ctx, args): Promise<readonly SessionSummary[]> => {
+  handler: async (ctx, args): Promise<readonly BoardSession[]> => {
     const conference = await ctx.db.get(args.conferenceId);
     if (conference === null) {
       return [];
@@ -138,9 +142,10 @@ export const conferenceSessions = query({
         .collect(),
     ]);
     const urlBySourceId = new Map(sources.map((source) => [source._id, source.url]));
-    return sessions.map((session) =>
-      toSessionSummary(session, urlBySourceId.get(session.sourceId) ?? conference.agendaUrl),
-    );
+    return sessions.map((session) => ({
+      ...toSessionSummary(session, urlBySourceId.get(session.sourceId) ?? conference.agendaUrl),
+      cancelled: session.cancelledAt !== undefined,
+    }));
   },
 });
 

@@ -166,6 +166,16 @@ export const confirmAgendaChanges = mutation({
     const nextByKey = new Map(args.next.map((session) => [session.externalKey, session]));
 
     for (const change of diff.changes) {
+      if (change.kind === "cancelled") {
+        const retired = byKey.get(change.externalKey);
+
+        if (retired !== undefined && retired.cancelledAt === undefined) {
+          await ctx.db.patch(retired._id, { cancelledAt: Date.now() });
+        }
+
+        continue;
+      }
+
       if (change.nextExternalKey === null) {
         continue;
       }

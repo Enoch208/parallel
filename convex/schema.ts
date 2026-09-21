@@ -50,6 +50,7 @@ export default defineSchema({
     titleConfidence: confidence,
     timeConfidence: confidence,
     roomConfidence: confidence,
+    cancelledAt: v.optional(v.number()),
   })
     .index("by_conference", ["conferenceId"])
     .index("by_conference_start", ["conferenceId", "startsAt"])

@@ -70,3 +70,20 @@ describe("confirming a published agenda change", () => {
     expect(untouched?.startsAt).toBe(BASE);
   });
 });
+
+describe("an organizer cancelling a session", () => {
+  it("retires the session rather than deleting it, so nothing that points at it is orphaned", async () => {
+    const t = freshHarness();
+    const fixture = await t.run((ctx) => seedCoverScenario(ctx));
+
+    await t.mutation(api.agendaWatch.confirmAgendaChanges, {
+      conferenceId: fixture.conferenceId,
+      contentHash: "cancelled-fetch",
+      next: [published("Vector Search", BASE + HOUR / 2, null)],
+    });
+
+    const retired = await t.run((ctx) => ctx.db.get(fixture.droppedSessionId));
+    expect(retired).not.toBeNull();
+    expect(typeof retired?.cancelledAt).toBe("number");
+  });
+});
