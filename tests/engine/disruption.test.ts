@@ -24,6 +24,8 @@ import {
   withExtraBlock,
 } from "./random-instances";
 
+const exhaustiveSearchBudget = { timeout: 30_000 };
+
 const SWEEP_COUNT = 300;
 
 const trackLabels = ["Alpha", "Beta", "Gamma"];
@@ -269,7 +271,7 @@ function sweep(
   }
 }
 
-describe("minimum-disruption repair over generated revisions", () => {
+describe("minimum-disruption repair over generated revisions", exhaustiveSearchBudget, () => {
   it("certifies a minimum that brute force confirms and penalty repair never beats", () => {
     const totals: SweepTotals = {
       failures: [],

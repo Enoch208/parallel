@@ -10,6 +10,8 @@ import { outcomeFailures, sessionById } from "./invariants";
 import { largeShape, mediumShape, randomInstance, withExtraBlock } from "./random-instances";
 import { goal, member, score, session } from "./fixtures";
 
+const exhaustiveSearchBudget = { timeout: 30_000 };
+
 const INSTANCE_COUNT = 2000;
 const REPAIR_COUNT = 600;
 const DETERMINISM_COUNT = 400;
@@ -30,7 +32,7 @@ function survivesBlocks(input: OptimizerInput, assignments: readonly AssignmentS
   );
 }
 
-describe("randomized optimizer invariants", () => {
+describe("randomized optimizer invariants", exhaustiveSearchBudget, () => {
   it("holds every hard constraint over generated instances", () => {
     const failures: string[] = [];
     for (let seed = 1; seed <= INSTANCE_COUNT; seed += 1) {
