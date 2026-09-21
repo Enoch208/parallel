@@ -1,5 +1,6 @@
 export const replyIntents = [
   "cant_attend",
+  "pin",
   "yes",
   "no",
   "takeaways",
@@ -24,7 +25,7 @@ export const replyExtractionSchema = {
 } as const;
 
 export const replySystemPrompt =
-  "Classify an inbound email reply from a conference teammate. intent: cant_attend when they say they cannot attend something; yes when they accept covering a session; no when they decline; takeaways when they are sharing what they learned; agenda_change when forwarding an organizer notice; question when asking something; otherwise other. sessionHint is the session title or topic they refer to, or null. timeHint is the clock time they refer to such as '2pm', or null. quote MUST be copied verbatim from the email body, exactly as written, and is the single sentence you relied on. Never paraphrase the quote. confidence is 0 to 1.";
+  "Classify an inbound email reply from a conference teammate. intent: cant_attend when they say they cannot attend something; pin when they insist on keeping or being given a specific session, such as asking to be pinned to it or saying they must be at it; yes when they accept covering a session; no when they decline; takeaways when they are sharing what they learned; agenda_change when forwarding an organizer notice; question when asking something; otherwise other. sessionHint is the session title or topic they refer to, or null. timeHint is the clock time they refer to such as '2pm', or null. quote MUST be copied verbatim from the email body, exactly as written, and is the single sentence you relied on. Never paraphrase the quote. confidence is 0 to 1.";
 
 export interface ParsedReply {
   readonly intent: ReplyIntent;

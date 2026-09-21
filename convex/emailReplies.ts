@@ -164,6 +164,41 @@ export const applyParsedReply = internalMutation({
       return { applied: false, reason: "unknown_session" as const };
     }
 
+    if (args.intent === "pin") {
+      const conferenceId = event.conferenceId;
+      const membershipId = event.membershipId;
+      const existing = await ctx.db
+        .query("memberPreferences")
+        .withIndex("by_member", (q) =>
+          q.eq("conferenceId", conferenceId).eq("membershipId", membershipId),
+        )
+        .collect();
+      const current = existing.find((row) => row.sessionId === args.sessionId);
+
+      if (current === undefined) {
+        await ctx.db.insert("memberPreferences", {
+          conferenceId: event.conferenceId,
+          membershipId: event.membershipId,
+          sessionId: args.sessionId,
+          stance: "pinned",
+        });
+      } else {
+        await ctx.db.patch(current._id, { stance: "pinned" });
+      }
+
+      const pinRevision = await bumpConstraintRevision(ctx, event.conferenceId);
+
+      await ctx.db.insert("activity", {
+        conferenceId: event.conferenceId,
+        kind: "constraint_added",
+        sponsor: "openai",
+        durationMs: 0,
+        summary: `Reply parsed as a request to pin "${session.title}"`,
+      });
+
+      return { applied: true, reason: null, constraintRevision: pinRevision };
+    }
+
     if (args.intent === "takeaways") {
       const author = await ctx.db.get(event.membershipId);
 
@@ -270,7 +305,8 @@ export const parseAndApply = action({
 
     let sessionId: Id<"sessions"> | null = null;
 
-    const namesASession = parsed.intent === "cant_attend" || parsed.intent === "takeaways";
+    const namesASession =
+      parsed.intent === "cant_attend" || parsed.intent === "takeaways" || parsed.intent === "pin";
 
     if (namesASession) {
       const byTime =
