@@ -8,7 +8,7 @@ come back as ordinary replies.
 
 - **Live:** https://joyous-akita-768.convex.site
 - **Repo:** https://github.com/Enoch208/parallel
-- **Demo video:** https://github.com/user-attachments/assets/19891333-4520-40de-a375-207f92427ae2
+- **Demo video (2:40):** plays at the top of the [README](https://github.com/Enoch208/parallel#readme)
 - **Posts:** not yet published
 
 ## The verified production run
