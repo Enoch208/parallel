@@ -97,14 +97,14 @@ The full chain has been exercised end to end on the development deployment
 - **4 takeaways** and a generated brief in which every claim cites a note that was handed to the
   model.
 
-Production was checked directly on **20 September 2026**. Alongside the seeded demo workspaces,
-it holds a real ViVE import with **9 sessions**, a source URL, fetch time and SHA-256 content hash,
-and **35 of 36 requested relevance scores** recorded with `gpt-5.4-mini`. Three plan sends have
-AgentMail provider message IDs. One real reply reached the signed webhook, routed to the correct
-teammate, and was parsed as `cant_attend` with confidence 0.99. It remains **pending confirmation**:
-the quoted time did not identify an imported session, so no block was applied and the plan did
-not become stale. This verifies production receipt and parsing, not a completed reply-to-repair
-round trip. See the [production verification record](production-proof.md) for the evidence and gaps.
+Production was checked directly on **21 September 2026**. Alongside the seeded demo workspaces it
+holds a real ViVE import with **9 sessions**, a source URL, fetch time and SHA-256 content hash,
+and **35 of 36 requested relevance scores** recorded with `gpt-5.4-mini`. Plan sends carry AgentMail
+provider message IDs, and the reply-to-repair round trip has completed on that workspace: a real
+reply reached the signed webhook, was parsed as `cant_attend` at 0.98 confidence, became an
+availability block carrying the teammate's verbatim sentence, marked the plan stale, drove a
+one-person repair, and a second teammate accepted the cover by replying YES. That workspace is
+linked at the top of this file and every step is listed in its activity panel.
 
 Pressing **Run the demo** on `/judges` builds a fresh seeded workspace and runs the real optimizer,
 repair and cover ranking. Its constraint change is simulated; it does not send or receive email.
