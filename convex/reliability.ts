@@ -152,7 +152,7 @@ function proveQuoteMustBeVerbatim(): ReliabilityProof {
     claim: "A model quote that is not in the email is never acted on",
     passed,
     detail: passed
-      ? "A paraphrase at 0.99 confidence was refused; the same reading quoting the email word for word was accepted"
+      ? "A paraphrase at 0.99 confidence was refused; the same reading quoting the email word for word was accepted. The check is plain code that runs on every parsed reply, so it needs no model call"
       : `Paraphrase verified: ${String(paraphrased.quoteVerified)}, verbatim verified: ${String(verbatim.quoteVerified)}`,
     durationMs: Date.now() - startedAt,
   };

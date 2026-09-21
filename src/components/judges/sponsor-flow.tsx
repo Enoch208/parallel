@@ -3,10 +3,10 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 
 const steps = [
-  { name: "Firecrawl", role: "gets the conference" },
-  { name: "OpenAI", role: "understands it" },
-  { name: "Convex", role: "coordinates the team and protects the plan" },
-  { name: "AgentMail", role: "keeps the people in the loop" },
+  { name: "Firecrawl", role: "scrapes the public agenda page, keeping its source" },
+  { name: "OpenAI", role: "turns it into sessions, scores them, reads replies, writes the brief" },
+  { name: "Convex", role: "runs the optimizer, keeps every screen live, refuses stale writes" },
+  { name: "AgentMail", role: "emails each plan out and brings the replies back" },
 ] as const;
 
 export function SponsorFlow() {

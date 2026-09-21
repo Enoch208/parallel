@@ -1,4 +1,6 @@
+import { Link } from "react-router";
 import type { VerifiedRun } from "@convex/verifiedRun";
+import { appRoutes } from "@/lib/routes";
 
 function plural(count: number, one: string, many: string): string {
   return `${String(count)} ${count === 1 ? one : many}`;
@@ -54,6 +56,13 @@ export function ImpactRow({ run }: { run: VerifiedRun }) {
           </li>
         ))}
       </ul>
+
+      <Link
+        to={`${appRoutes.evidence}?c=${run.conferenceId}`}
+        className="w-fit text-sm font-medium text-blue-300 underline-offset-4 hover:underline"
+      >
+        Read the real reply email and the exact sentence the model relied on
+      </Link>
     </section>
   );
 }

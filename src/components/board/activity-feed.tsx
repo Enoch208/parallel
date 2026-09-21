@@ -31,7 +31,11 @@ function formatClock(at: number): string {
 
 export function ActivityFeed({ rows }: { rows: readonly ActivityRow[] }) {
   return (
-    <details open className="rounded-2xl border border-white/5 bg-white/[0.02]">
+    <details
+      open
+      id="how-parallel-worked"
+      className="scroll-mt-6 rounded-2xl border border-white/5 bg-white/[0.02]"
+    >
       <summary className="cursor-pointer px-5 py-3 text-sm font-medium text-white">
         How Parallel worked
       </summary>

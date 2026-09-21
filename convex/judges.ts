@@ -61,7 +61,10 @@ export const runDemo = action({
     );
 
     await ctx.runMutation(api.plan.repair, { conferenceId });
-    await snapshot("Repair", "Only the teammate who replied is moved. The gap is now visible.");
+    await snapshot(
+      "Repair",
+      "Only the teammate who replied is moved. Their session is left open rather than silently refilled, and coverage falls only by what that session alone added.",
+    );
 
     const proposal = await ctx.runMutation(api.cover.proposeCover, {
       conferenceId,

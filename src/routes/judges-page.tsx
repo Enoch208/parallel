@@ -45,7 +45,7 @@ export function JudgesPage() {
       <AppHeader title="Judges" context="One click, the whole loop" />
       <PageHeading
         title="See it work in 90 seconds"
-        description="See it work on a fresh workspace of your own, inspect the verified production run, then try to break it. Nothing here is scripted; every number is computed from stored rows as you watch."
+        description="See it work on a fresh workspace of your own, inspect the verified production run, then try to break it. Every number is computed from stored rows as you watch."
       />
 
       <div className="flex flex-col gap-6">
@@ -83,6 +83,10 @@ export function JudgesPage() {
 
         {run !== null && (
           <>
+            <p className="text-xs leading-relaxed text-neutral-500">
+              This run uses a fresh workspace on a fictional demo agenda, so its numbers are its own
+              and differ from the verified production run above.
+            </p>
             <JudgeStepList steps={run.steps} />
 
             {run.coverCandidate !== null && run.coverSessionTitle !== null && (

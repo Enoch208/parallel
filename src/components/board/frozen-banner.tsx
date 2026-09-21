@@ -10,8 +10,11 @@ export function FrozenBanner() {
       <p className="max-w-2xl text-sm leading-relaxed text-neutral-300">
         A real public agenda, real email between real inboxes, and every step it took. It is kept
         exactly as it happened, so the buttons here are refused rather than allowed to change the
-        record. Open <span className="text-white">How Parallel worked</span> below for each step, or
-        the Evidence screen to trace any number to its source.
+        record. Open{" "}
+        <a href="#how-parallel-worked" className="text-white underline underline-offset-4">
+          How Parallel worked
+        </a>{" "}
+        below for each step, or the Evidence screen to trace any number to its source.
       </p>
       <Link
         to={appRoutes.judges}

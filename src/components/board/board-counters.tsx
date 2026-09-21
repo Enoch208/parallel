@@ -7,7 +7,7 @@ export function BoardCounters({ coverage }: { coverage: CoverageSummary | null }
       <CounterTile
         emphasis
         label="Team Goal Coverage"
-        value={coverage === null ? null : Math.round(coverage.teamGoalCoverage)}
+        value={coverage === null ? null : Math.round(coverage.teamGoalCoverage * 10) / 10}
         caption="How strongly the team's assigned sessions cover its weighted goals, with diminishing returns for redundant sessions. 0 to 100."
       />
       <CounterTile
