@@ -8,7 +8,7 @@ come back as ordinary replies.
 
 - **Live:** https://joyous-akita-768.convex.site
 - **Repo:** https://github.com/Enoch208/parallel
-- **Demo video:** not yet recorded
+- **Demo video:** https://github.com/user-attachments/assets/19891333-4520-40de-a375-207f92427ae2
 - **Posts:** not yet published
 
 ## The verified production run
@@ -173,7 +173,7 @@ exactly as a k-track interval scheduling problem rather than estimated.
 The engine is verified by randomized property testing rather than a handful of fixtures: generated
 instances checked for hard-constraint violations, exact-versus-brute-force comparisons with zero
 disagreements, and determinism checked by running the same instance twice and by reversing input
-order. **46 test files, 356 tests, passing locally and in GitHub Actions on 21 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
+order. **47 test files, 357 tests, passing locally and in GitHub Actions on 21 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
 excluding proposed cover that has not been accepted. The tests found that beam search alone is genuinely
 suboptimal on a measurable share of instances, which is why the exact mode exists.
 
