@@ -9,6 +9,7 @@ import { PageHeading } from "@/components/chrome/page-heading";
 import { BriefBody } from "@/components/knowledge/brief-body";
 import { BriefGeneratePanel } from "@/components/knowledge/brief-generate-panel";
 import { RecipientPanel } from "@/components/knowledge/recipient-panel";
+import { BriefSendPanel } from "@/components/knowledge/brief-send-panel";
 import { TripSummaryCard } from "@/components/knowledge/trip-summary-card";
 import { errorMessage } from "@/components/setup/setup-shell";
 import { useDemoConference } from "@/lib/use-demo-conference";
@@ -164,6 +165,11 @@ export function BriefPage() {
               </span>
             </div>
             <BriefBody body={brief.body} />
+            <BriefSendPanel
+              briefId={brief.id}
+              recipients={brief.recipients}
+              alreadySent={brief.sentAt !== null}
+            />
           </section>
         )}
       </div>

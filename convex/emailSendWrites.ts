@@ -269,3 +269,85 @@ export const recordSend = internalMutation({
     return { recorded: true };
   },
 });
+
+export interface BriefDelivery {
+  readonly conferenceId: Id<"conferences">;
+  readonly conferenceName: string;
+  readonly body: string;
+  readonly recipients: readonly string[];
+  readonly sentAt: number | null;
+}
+
+export const briefDelivery = internalQuery({
+  args: { briefId: v.id("briefs") },
+  handler: async (ctx, args): Promise<BriefDelivery | null> => {
+    const brief = await ctx.db.get(args.briefId);
+
+    if (brief === null) {
+      return null;
+    }
+
+    const conference = await ctx.db.get(brief.conferenceId);
+
+    if (conference === null) {
+      return null;
+    }
+
+    return {
+      conferenceId: brief.conferenceId,
+      conferenceName: conference.name,
+      body: brief.body,
+      recipients: brief.recipients,
+      sentAt: brief.sentAt,
+    };
+  },
+});
+
+export const recordBriefSend = internalMutation({
+  args: {
+    conferenceId: v.id("conferences"),
+    idempotencyKey: v.string(),
+    providerMessageId: v.string(),
+  },
+  handler: async (ctx, args): Promise<{ recorded: boolean }> => {
+    const existing = await ctx.db
+      .query("outboundSends")
+      .withIndex("by_idempotency", (q) => q.eq("idempotencyKey", args.idempotencyKey))
+      .first();
+
+    if (existing !== null) {
+      return { recorded: false };
+    }
+
+    await ctx.db.insert("outboundSends", {
+      conferenceId: args.conferenceId,
+      membershipId: null,
+      kind: "brief",
+      planRevision: 0,
+      idempotencyKey: args.idempotencyKey,
+      providerMessageId: args.providerMessageId,
+      sentAt: Date.now(),
+    });
+
+    return { recorded: true };
+  },
+});
+
+export const stampBriefSent = internalMutation({
+  args: { briefId: v.id("briefs") },
+  handler: async (ctx, args): Promise<{ sentAt: number }> => {
+    const brief = await ctx.db.get(args.briefId);
+
+    if (brief === null) {
+      throw new Error("Brief not found");
+    }
+
+    if (brief.sentAt !== null) {
+      return { sentAt: brief.sentAt };
+    }
+
+    const sentAt = Date.now();
+    await ctx.db.patch(args.briefId, { sentAt });
+    return { sentAt };
+  },
+});

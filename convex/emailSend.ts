@@ -10,6 +10,7 @@ import {
   coverEmailBody,
 } from "./model/agentmailClient";
 import type {
+  BriefDelivery,
   CoverDetail,
   Delivery,
   PlanTargets,
@@ -201,5 +202,87 @@ export const sendCoverRequest = action({
     }
 
     return outcome;
+  },
+});
+
+export const sendBrief = action({
+  args: { briefId: v.id("briefs") },
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ sent: number; skipped: number; outcomes: SendOutcome[] }> => {
+    const brief: BriefDelivery | null = await ctx.runQuery(internal.emailSendWrites.briefDelivery, {
+      briefId: args.briefId,
+    });
+
+    if (brief === null) {
+      throw new Error("That brief no longer exists");
+    }
+
+    if (brief.recipients.length === 0) {
+      throw new Error("Add at least one recipient before sending the brief");
+    }
+
+    const outcomes: SendOutcome[] = [];
+
+    for (const recipient of brief.recipients) {
+      const idempotencyKey = `brief:${args.briefId}:${recipient.toLowerCase()}`;
+      const gate = await ctx.runQuery(internal.emailSendWrites.sendGate, {
+        conferenceId: brief.conferenceId,
+        idempotencyKey,
+      });
+
+      if (gate.alreadySent !== null) {
+        outcomes.push({ email: recipient, status: "skipped", detail: gate.alreadySent });
+        continue;
+      }
+
+      if (gate.usedToday >= dailySendBudget) {
+        outcomes.push({
+          email: recipient,
+          status: "budget_exhausted",
+          detail: `${String(gate.usedToday)} sends already used today, the budget is ${String(dailySendBudget)}`,
+        });
+        continue;
+      }
+
+      const startedAt = Date.now();
+      const delivered = await sendEmail({
+        inboxId: requireKey("AGENTMAIL_INBOX"),
+        to: [recipient],
+        subject: `${brief.conferenceName}: what the team brought back`,
+        text: brief.body,
+        apiKey: requireKey("AGENTMAIL_API_KEY"),
+      });
+
+      await ctx.runMutation(internal.emailSendWrites.recordBriefSend, {
+        conferenceId: brief.conferenceId,
+        idempotencyKey,
+        providerMessageId: delivered.messageId,
+      });
+      await ctx.runMutation(internal.importWrites.recordActivity, {
+        conferenceId: brief.conferenceId,
+        kind: "brief_email_sent",
+        sponsor: "agentmail",
+        durationMs: Date.now() - startedAt,
+        summary: `Brief delivered to ${recipient}`,
+      });
+
+      outcomes.push({ email: recipient, status: "sent", detail: delivered.messageId });
+    }
+
+    const reached = outcomes.filter(
+      (outcome) => outcome.status === "sent" || outcome.status === "skipped",
+    );
+
+    if (reached.length > 0) {
+      await ctx.runMutation(internal.emailSendWrites.stampBriefSent, { briefId: args.briefId });
+    }
+
+    return {
+      sent: outcomes.filter((outcome) => outcome.status === "sent").length,
+      skipped: outcomes.filter((outcome) => outcome.status === "skipped").length,
+      outcomes,
+    };
   },
 });
