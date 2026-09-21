@@ -21,6 +21,7 @@ export function BoardView({
   objective,
   upperBound,
   timezone,
+  showDay,
   staleReason,
   optimizing,
   repairing,
@@ -35,6 +36,7 @@ export function BoardView({
   objective: number | null;
   upperBound: number | null;
   timezone: string;
+  showDay: boolean;
   staleReason: string | null;
   optimizing: boolean;
   repairing: boolean;
@@ -76,6 +78,7 @@ export function BoardView({
             isLead={lane.isLead}
             cards={lane.cards}
             timezone={timezone}
+            showDay={showDay}
             claimable={lane.claimable}
             onRelease={(sessionId) => {
               onRelease(lane.membershipId, sessionId);

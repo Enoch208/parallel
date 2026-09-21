@@ -12,6 +12,7 @@ import { FrozenBanner } from "@/components/board/frozen-banner";
 import type { LaneCard } from "@/components/board/lane-column";
 import type { CardState } from "@/components/board/session-card";
 import { errorMessage } from "@/components/setup/setup-shell";
+import { spansSeveralDays } from "@/lib/format-time";
 import { useDemoConference } from "@/lib/use-demo-conference";
 
 export function BoardPage() {
@@ -260,6 +261,10 @@ export function BoardPage() {
         objective={plan === null ? null : plan.objective}
         upperBound={plan === null ? null : plan.upperBound}
         timezone={overview.conference.timezone}
+        showDay={spansSeveralDays(
+          sessions.map((session) => session.startsAt),
+          overview.conference.timezone,
+        )}
         staleReason={
           plan !== null && plan.isStale
             ? "A constraint changed since this plan was computed."

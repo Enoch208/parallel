@@ -1,6 +1,6 @@
 import type { SessionSummary } from "@convex/model/types";
 import { cx } from "@/lib/cx";
-import { formatTimeRange } from "@/lib/format-time";
+import { formatDay, formatTimeRange } from "@/lib/format-time";
 
 export type CardState = "assigned" | "duplicate" | "gap" | "pinned" | "cancelled";
 
@@ -23,12 +23,14 @@ const stateLabels: Record<CardState, string | null> = {
 export function SessionCard({
   session,
   timezone,
+  showDay,
   state,
   reason,
   onRelease,
 }: {
   session: SessionSummary;
   timezone: string;
+  showDay: boolean;
   state: CardState;
   reason: string | null;
   onRelease?: () => void;
@@ -42,6 +44,11 @@ export function SessionCard({
         stateStyles[state],
       )}
     >
+      {showDay && (
+        <span className="font-mono text-[11px] text-neutral-300 tabular-nums">
+          {formatDay(session.startsAt, timezone)}
+        </span>
+      )}
       <div className="flex items-baseline justify-between gap-2">
         <span className="font-mono text-[11px] tabular-nums text-neutral-400">
           {formatTimeRange(session.startsAt, session.endsAt, timezone)}

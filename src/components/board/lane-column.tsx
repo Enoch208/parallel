@@ -1,6 +1,6 @@
 import type { SessionSummary } from "@convex/model/types";
 import { SessionCard, type CardState } from "./session-card";
-import { formatTimeRange } from "@/lib/format-time";
+import { formatSessionTime } from "@/lib/format-time";
 
 export interface LaneCard {
   readonly session: SessionSummary;
@@ -13,6 +13,7 @@ export function LaneColumn({
   isLead,
   cards,
   timezone,
+  showDay,
   claimable,
   onRelease,
   onClaim,
@@ -21,6 +22,7 @@ export function LaneColumn({
   isLead: boolean;
   cards: readonly LaneCard[];
   timezone: string;
+  showDay: boolean;
   claimable: readonly SessionSummary[];
   onRelease?: (sessionId: string) => void;
   onClaim?: (sessionId: string) => void;
@@ -49,6 +51,7 @@ export function LaneColumn({
           key={card.session.id}
           session={card.session}
           timezone={timezone}
+          showDay={showDay}
           state={card.state}
           reason={card.reason}
           {...(onRelease === undefined
@@ -78,7 +81,8 @@ export function LaneColumn({
             <option value="">Choose a session…</option>
             {claimable.map((session) => (
               <option key={session.id} value={session.id}>
-                {formatTimeRange(session.startsAt, session.endsAt, timezone)} · {session.title}
+                {formatSessionTime(session.startsAt, session.endsAt, timezone, showDay)} ·{" "}
+                {session.title}
               </option>
             ))}
           </select>
