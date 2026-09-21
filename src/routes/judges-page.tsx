@@ -7,6 +7,7 @@ import { AppHeader } from "@/components/chrome/app-header";
 import { PageHeading } from "@/components/chrome/page-heading";
 import { JudgeStepList } from "@/components/judges/judge-step-list";
 import { JudgeCoverCard } from "@/components/judges/judge-cover-card";
+import { ReliabilityPanel } from "@/components/judges/reliability-panel";
 import { errorMessage } from "@/components/setup/setup-shell";
 import { useDemoConference } from "@/lib/use-demo-conference";
 import { appRoutes } from "@/lib/routes";
@@ -79,6 +80,8 @@ export function JudgesPage() {
             </Link>
           </>
         )}
+
+        <ReliabilityPanel />
       </div>
     </>
   );
