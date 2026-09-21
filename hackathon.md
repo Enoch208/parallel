@@ -53,6 +53,10 @@ hiding it.
    long each step took.
 4. Open a second tab on the same board. Press **Release** on a card in one tab and watch the other
    update. A write against a stale plan is refused with a message that says what to do.
+5. Back on **/judges**, press **Run the attacks** under _Try to break it_. Four guards are attacked
+   through the production code on a throwaway workspace that is deleted afterwards: the same webhook
+   delivered twice, a write from a browser whose plan has moved on, a model quote that paraphrases
+   the email, and a send retried with the same key. Each reports what it refused and why.
 
 ## What each sponsor does
 
@@ -158,18 +162,12 @@ exactly as a k-track interval scheduling problem rather than estimated.
 The engine is verified by randomized property testing rather than a handful of fixtures: generated
 instances checked for hard-constraint violations, exact-versus-brute-force comparisons with zero
 disagreements, and determinism checked by running the same instance twice and by reversing input
-order. **38 test files, 325 tests, passing locally and in GitHub Actions on 21 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
+order. **45 test files, 350 tests, passing locally and in GitHub Actions on 21 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
 excluding proposed cover that has not been accepted. The tests found that beam search alone is genuinely
 suboptimal on a measurable share of instances, which is why the exact mode exists.
 
 ## Known issues
 
-- The import workflow reports success even when the model returns fewer scores than were requested.
-  The production run finished one pair short and was completed by rescoring; the workflow should
-  treat a short matrix as partial rather than complete.
-- A reply whose wording matches no session stays pending in the backend, and the app exposes no
-  control to resolve one by hand. Two replies sent before session matching was widened are still in
-  that state and are listed on the Evidence screen.
 - The brief closes the loop in the product and is covered by tests, but the permanent production
   run above stops at the accepted cover; it does not yet carry takeaways and a sent brief.
 - On a large agenda the solver runs out of search budget and reports "best found, not proven
@@ -179,9 +177,6 @@ suboptimal on a measurable share of instances, which is why the exact mode exist
   coverage. The lane says so, and anyone can take a session from it by hand.
 - A send accepted by the email provider whose response never reaches us would be retried, so
   at-least-once delivery is possible in that narrow window.
-- When a re-published agenda cancels a session, the row stays in the database so the assignments
-  pointing at it are not orphaned. It is reported as cancelled and counted as disrupting, but it
-  is still drawn on the board until someone removes it.
 - Two sittings of a generic title with no surviving anchor — two "Lunch" entries where one
   survives in a different room at a different time — are reported as ambiguous rather than paired.
   That is deliberate: the alternative is guessing which one moved.
