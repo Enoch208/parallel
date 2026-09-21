@@ -73,6 +73,7 @@ import type * as model_scoringCompleteness from "../model/scoringCompleteness.js
 import type * as model_scoringSchema from "../model/scoringSchema.js";
 import type * as model_sessionMatch from "../model/sessionMatch.js";
 import type * as model_svix from "../model/svix.js";
+import type * as model_takeawaySubstance from "../model/takeawaySubstance.js";
 import type * as model_threadRouting from "../model/threadRouting.js";
 import type * as model_timezone from "../model/timezone.js";
 import type * as model_titleSimilarity from "../model/titleSimilarity.js";
@@ -160,6 +161,7 @@ declare const fullApi: ApiFromModules<{
   "model/scoringSchema": typeof model_scoringSchema;
   "model/sessionMatch": typeof model_sessionMatch;
   "model/svix": typeof model_svix;
+  "model/takeawaySubstance": typeof model_takeawaySubstance;
   "model/threadRouting": typeof model_threadRouting;
   "model/timezone": typeof model_timezone;
   "model/titleSimilarity": typeof model_titleSimilarity;
