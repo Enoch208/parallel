@@ -162,7 +162,7 @@ exactly as a k-track interval scheduling problem rather than estimated.
 The engine is verified by randomized property testing rather than a handful of fixtures: generated
 instances checked for hard-constraint violations, exact-versus-brute-force comparisons with zero
 disagreements, and determinism checked by running the same instance twice and by reversing input
-order. **45 test files, 350 tests, passing locally and in GitHub Actions on 21 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
+order. **46 test files, 356 tests, passing locally and in GitHub Actions on 21 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
 excluding proposed cover that has not been accepted. The tests found that beam search alone is genuinely
 suboptimal on a measurable share of instances, which is why the exact mode exists.
 
