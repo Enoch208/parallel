@@ -38,6 +38,8 @@ function Figure({
 
 export function TripSummaryCard({ summary }: { summary: TripSummary }) {
   const count = (value: number) => String(value);
+  const plural = (value: number, one: string, many: string) =>
+    `${count(value)} ${value === 1 ? one : many}`;
 
   return (
     <section className="flex flex-col gap-4 rounded-2xl border border-white/5 bg-white/[0.02] p-5">
@@ -61,7 +63,7 @@ export function TripSummaryCard({ summary }: { summary: TripSummary }) {
         <Figure
           label="Sessions covered"
           value={`${count(summary.sessionsUniquelyCovered)} of ${count(summary.sessionsAvailable)}`}
-          caption={`Unique sessions the team is assigned to, out of the agenda. ${count(summary.duplicateAttendances)} duplicate attendances.`}
+          caption={`Unique sessions the team is assigned to, out of the agenda. ${plural(summary.duplicateAttendances, "duplicate attendance", "duplicate attendances")}.`}
         />
         <Figure
           label="Goals represented"
@@ -71,7 +73,7 @@ export function TripSummaryCard({ summary }: { summary: TripSummary }) {
         <Figure
           label="Takeaways captured"
           value={count(summary.takeawaysCaptured)}
-          caption={`Across ${count(summary.sessionsWithTakeaways)} sessions. These are the only evidence the brief may cite.`}
+          caption={`Across ${plural(summary.sessionsWithTakeaways, "session", "sessions")}. These are the only evidence the brief may cite.`}
         />
         <Figure
           label="Attendees"

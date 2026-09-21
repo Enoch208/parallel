@@ -278,7 +278,9 @@ export const latest = query({
       sessionsAvailable: input.sessions.length,
       before: computeCoverageSummary(input, naturalAssignments(input)),
       after: computeCoverageSummary(input, assignments),
-      noteSessionIds: noteRows.map((note) => note.sessionId),
+      noteSessionIds: noteRows
+        .filter((note) => note.approved !== false)
+        .map((note) => note.sessionId),
     });
 
     return {
