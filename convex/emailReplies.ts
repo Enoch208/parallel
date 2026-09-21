@@ -11,6 +11,7 @@ import {
   shouldApplyAutomatically,
 } from "./model/replySchema";
 import { matchSessionByTime, matchSessionByTitle } from "./model/sessionMatch";
+import { saysMoreThanTheTitle } from "./model/takeawaySubstance";
 import { bumpConstraintRevision } from "./constraints";
 import {
   applyCoverAcceptance,
@@ -144,11 +145,15 @@ interface ResolvedReply {
 async function applyReplyToSession(
   ctx: MutationCtx,
   reply: ResolvedReply,
-): Promise<{ applied: boolean; reason: "unknown_session" | null }> {
+): Promise<{ applied: boolean; reason: "unknown_session" | "empty_takeaway" | null }> {
   const session = await ctx.db.get(reply.sessionId);
 
   if (session === null) {
     return { applied: false, reason: "unknown_session" };
+  }
+
+  if (reply.intent === "takeaways" && !saysMoreThanTheTitle(reply.body, session.title)) {
+    return { applied: false, reason: "empty_takeaway" };
   }
 
   if (reply.intent === "pin") {
@@ -260,6 +265,12 @@ export const resolveByHand = mutation({
       origin: "Resolved by hand",
     });
 
+    if (outcome.reason === "empty_takeaway") {
+      throw new Error(
+        "That reply names the session but says nothing about it, so there is no takeaway to file",
+      );
+    }
+
     if (!outcome.applied) {
       throw new Error("That session could not be resolved");
     }
@@ -291,18 +302,14 @@ export const applyParsedReply = internalMutation({
       return { applied: false, reason: "unmatched" as const };
     }
 
-    await ctx.db.patch(args.eventId, {
-      intent: args.intent,
-      confidence: args.confidence,
-      quote: args.quote,
-      handled: args.applied,
-    });
+    const parsed = { intent: args.intent, confidence: args.confidence, quote: args.quote };
 
     if (!args.applied || args.sessionId === null) {
+      await ctx.db.patch(args.eventId, { ...parsed, handled: false });
       return { applied: false, reason: "needs_confirmation" as const };
     }
 
-    return applyReplyToSession(ctx, {
+    const outcome = await applyReplyToSession(ctx, {
       conferenceId: event.conferenceId,
       membershipId: event.membershipId,
       intent: args.intent,
@@ -311,6 +318,9 @@ export const applyParsedReply = internalMutation({
       quote: args.quote,
       origin: "Reply parsed",
     });
+
+    await ctx.db.patch(args.eventId, { ...parsed, handled: outcome.applied });
+    return outcome;
   },
 });
 

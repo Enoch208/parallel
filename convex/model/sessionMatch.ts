@@ -115,7 +115,7 @@ const titleFiller = new Set([
   "to",
 ]);
 
-function significantWords(text: string): string[] {
+export function significantWords(text: string): string[] {
   return text
     .toLowerCase()
     .split(/[^a-z0-9]+/)

@@ -83,6 +83,36 @@ it("does not block anyone's calendar when the reply is a takeaway", async () => 
   expect(conference?.constraintRevision).toBe(before?.constraintRevision);
 });
 
+it("keeps a reply that only names the session pending instead of filing an empty note", async () => {
+  const { t, fixture, eventId } = await seedInboundReply("placeholder");
+  const title = await t.run(async (ctx) => (await ctx.db.get(fixture.droppedSessionId))?.title);
+  const body = `Takeaway from ${title ?? ""}`;
+  await t.run(async (ctx) => ctx.db.patch(eventId, { body }));
+
+  const outcome = await t.mutation(internal.emailReplies.applyParsedReply, {
+    eventId,
+    intent: "takeaways",
+    confidence: 0.97,
+    quote: body,
+    sessionId: fixture.droppedSessionId,
+    body,
+    applied: true,
+  });
+
+  const { stored, event } = await t.run(async (ctx) => ({
+    stored: await ctx.db
+      .query("notes")
+      .withIndex("by_conference", (q) => q.eq("conferenceId", fixture.conferenceId))
+      .collect(),
+    event: await ctx.db.get(eventId),
+  }));
+
+  expect(outcome.applied).toBe(false);
+  expect(outcome.reason).toBe("empty_takeaway");
+  expect(stored).toHaveLength(0);
+  expect(event?.handled).toBe(false);
+});
+
 it("keeps a takeaway that names no session pending instead of filing it anywhere", async () => {
   const body = "Good day overall, plenty to write up later.";
   const { t, fixture, eventId } = await seedInboundReply(body);
