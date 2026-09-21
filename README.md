@@ -11,6 +11,7 @@ ordinary replies.
 
 https://github.com/user-attachments/assets/19891333-4520-40de-a375-207f92427ae2
 
+- **Demo video (2:40):** https://youtu.be/dxzxkJJZu2E
 - **Live app:** https://joyous-akita-768.convex.site
 - **Judge path:** [`/judges`](https://joyous-akita-768.convex.site/judges) runs the whole loop on a
   workspace of your own, then lets you try to break it
