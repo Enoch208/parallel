@@ -151,7 +151,7 @@ exactly as a k-track interval scheduling problem rather than estimated.
 The engine is verified by randomized property testing rather than a handful of fixtures: generated
 instances checked for hard-constraint violations, exact-versus-brute-force comparisons with zero
 disagreements, and determinism checked by running the same instance twice and by reversing input
-order. **37 test files, 314 tests passed locally on 20 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
+order. **37 test files, 319 tests, passing locally and in GitHub Actions on 21 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
 excluding proposed cover that has not been accepted. The tests found that beam search alone is genuinely
 suboptimal on a measurable share of instances, which is why the exact mode exists.
 
@@ -159,11 +159,13 @@ suboptimal on a measurable share of instances, which is why the exact mode exist
 
 - The real production import has 35 of 36 requested relevance scores. Missing model output can
   leave an incomplete score matrix even though the import workflow completes.
-- Replies that need clarification remain pending in the backend; the app does not yet expose a
-  confirmation control. The real production reply is currently in this state.
-- The Evidence screen uses the browser's selected workspace. There is no direct public read-only
-  link to the real production proof workspace yet.
-- The CI workflow is prepared locally; it has not run on GitHub yet.
+- A reply whose wording matches no session stays pending in the backend, and the app exposes no
+  control to resolve one by hand. Two replies sent before session matching was widened are still in
+  that state and are listed on the Evidence screen.
+- Cover candidates are ranked by the coverage they restore and tied by membership id, so two
+  equally placed teammates are separated arbitrarily rather than by who is likeliest to accept.
+- The brief closes the loop in the product and is covered by tests, but the permanent production
+  run above stops at the accepted cover; it does not yet carry takeaways and a sent brief.
 - On a large agenda the solver runs out of search budget and reports "best found, not proven
   optimal" with the size of the gap, rather than claiming an optimum it has not proved. The demo
   agenda is just past that threshold.
