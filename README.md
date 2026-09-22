@@ -170,21 +170,23 @@ re-checks its own rules.
 
 ### Where each sponsor fits
 
-| Sponsor       | What it does in Parallel                                                                                                                             | Where                                                                      |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| **Convex**    | Database, reactive queries, the optimizer inside the plan-writing mutation, the revision guard, webhooks, crons, four components and the site itself | `convex/plan.ts`, `convex/assignments.ts`, `convex/http.ts`                |
-| **Firecrawl** | Scrapes the public agenda through the official Convex component and re-checks watched agendas for changes                                            | `convex/model/firecrawlComponent.ts`, `convex/agendaWatch.ts`              |
-| **OpenAI**    | Normalizes agenda markdown, scores session relevance, parses email replies, writes the brief                                                         | `convex/model/openaiClient.ts`                                             |
-| **AgentMail** | One shared inbox: plan emails, cover requests and the brief go out; replies come back through a Svix-verified webhook                                | `convex/model/agentmailClient.ts`, `convex/emailSend.ts`, `convex/http.ts` |
+| Sponsor       | What it does in Parallel                                                                                                                            | Where                                                                      |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **Convex**    | Database, reactive queries, the optimizer inside the plan-writing mutation, the revision guard, webhooks, crons, six components and the site itself | `convex/plan.ts`, `convex/assignments.ts`, `convex/http.ts`                |
+| **Firecrawl** | Scrapes the public agenda through the official Convex component and re-checks watched agendas for changes                                           | `convex/model/firecrawlComponent.ts`, `convex/agendaWatch.ts`              |
+| **OpenAI**    | Normalizes agenda markdown, scores session relevance, parses email replies, writes the brief                                                        | `convex/model/openaiClient.ts`                                             |
+| **AgentMail** | One shared inbox: plan emails, cover requests and the brief go out; replies come back through a Svix-verified webhook                               | `convex/model/agentmailClient.ts`, `convex/emailSend.ts`, `convex/http.ts` |
 
 ### Convex components
 
-| Component                     | What it carries                                                                                                         |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `@convex-dev/static-hosting`  | Serves the built Vite app from `convex.site` with SPA fallback, so the product is a single deployment                   |
-| `@convex-dev/workflow`        | Runs the agenda import as named, durable steps; the provider steps retry with backoff and the UI shows the current step |
-| `@convex-dev/workpool`        | Runs scoring in its own pool, two at a time with up to three attempts, so a long scoring run never starves the backend  |
-| `@firecrawl/firecrawl-convex` | Does the scraping, with its API key declared as component environment rather than read from the outer deployment        |
+| Component                     | What it carries                                                                                                                                                                                                                                                                                                              |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@convex-dev/static-hosting`  | Serves the built Vite app from `convex.site` with SPA fallback, so the product is a single deployment                                                                                                                                                                                                                        |
+| `@convex-dev/workflow`        | Runs the agenda import as named, durable steps; the provider steps retry with backoff and the UI shows the current step                                                                                                                                                                                                      |
+| `@convex-dev/workpool`        | Runs scoring in its own pool, two at a time with up to three attempts, so a long scoring run never starves the backend                                                                                                                                                                                                       |
+| `@firecrawl/firecrawl-convex` | Does the scraping, with its API key declared as component environment rather than read from the outer deployment                                                                                                                                                                                                             |
+| `@convex-dev/rate-limiter`    | Brief generation, the one public action that spends model tokens on demand, takes a token from a per-conference bucket (three at once, six an hour) before any model call; a refused attempt says when to retry. `convex/model/rateLimits.ts`, `convex/brief.ts`                                                             |
+| `@convex-dev/action-retrier`  | Inbound email parsing. The webhook queues each reply through it, so a network failure, 429 or 5xx from OpenAI is retried up to three times with exponential backoff; other failures are not retried and wait on the Evidence screen for a person. `convex/model/replyRetrier.ts`, `convex/emailReplies.ts`, `convex/http.ts` |
 
 `@agentmail/convex` was evaluated and rejected. Its `defineComponent("agentmail")` declares no
 `env` block, so `process.env.AGENTMAIL_API_KEY` is undefined inside the component sandbox whatever
@@ -236,7 +238,7 @@ sequenceDiagram
     H->>H: Verify Svix signature
     H->>DB: Store event, drop repeats by provider event id
     H->>DB: Route by thread id, then subject token plus sender
-    H->>P: Schedule parsing
+    H->>P: Queue parsing through the action retrier
     P->>AI: Structured output: intent, session, time, quote, confidence
     AI-->>P: cant_attend, 0.98, the exact sentence
     P->>P: Quote must appear verbatim in the email
@@ -392,19 +394,22 @@ Each of these is enforced in code and covered by tests. The first four can be at
 **Try to break it** on `/judges`, which runs them through the production code on a throwaway
 workspace and deletes it afterwards.
 
-| Guarantee                                                  | How                                                                                                 | Where                                                  |
-| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| A webhook delivered twice is stored once                   | Events are keyed by the provider's event id                                                         | `convex/emailIngest.ts`                                |
-| A browser holding an old plan cannot overwrite a newer one | Revision re-read at write time                                                                      | `convex/model/assignmentGuards.ts`                     |
-| A paraphrased model quote is never acted on                | Verbatim substring check before anything is applied                                                 | `convex/model/replySchema.ts`                          |
-| A retried send never delivers twice                        | Idempotency key on kind, teammate and revision, checked in a ledger before the provider call        | `convex/emailSendWrites.ts`                            |
-| A send loop cannot drain the inbox                         | Rolling 24-hour budget of 80 sends                                                                  | `convex/emailSend.ts`                                  |
-| An ambiguous reply is never guessed                        | Session matching requires exactly one candidate                                                     | `convex/model/sessionMatch.ts`                         |
-| An empty takeaway never reaches the brief                  | A takeaway needs at least four words beyond the session title; rejected notes are excluded          | `convex/model/takeawaySubstance.ts`, `convex/brief.ts` |
-| A cancelled session is never assigned                      | Planning input drops it; repair drops assignments that pointed at it                                | `convex/model/loadOptimizerInput.ts`                   |
-| Nobody else's day changes without consent                  | New assignments for others only through an accepted cover request                                   | `convex/model/coverAcceptance.ts`                      |
-| The verified run cannot drift                              | A frozen workspace refuses every write from the app, and inbound replies are stored but not applied | `convex/model/frozenConference.ts`                     |
-| A guest's clicks never touch another visitor's board       | Each guest gets a workspace of their own, removed after 24 hours                                    | `convex/guest.ts`                                      |
+| Guarantee                                                  | How                                                                                                           | Where                                                          |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| A webhook delivered twice is stored once                   | Events are keyed by the provider's event id                                                                   | `convex/emailIngest.ts`                                        |
+| A browser holding an old plan cannot overwrite a newer one | Revision re-read at write time                                                                                | `convex/model/assignmentGuards.ts`                             |
+| A paraphrased model quote is never acted on                | Verbatim substring check before anything is applied                                                           | `convex/model/replySchema.ts`                                  |
+| A retried send never delivers twice                        | Idempotency key on kind, teammate and revision, checked in a ledger before the provider call                  | `convex/emailSendWrites.ts`                                    |
+| A send loop cannot drain the inbox                         | Rolling 24-hour budget of 80 sends                                                                            | `convex/emailSend.ts`                                          |
+| An ambiguous reply is never guessed                        | Session matching requires exactly one candidate                                                               | `convex/model/sessionMatch.ts`                                 |
+| An empty takeaway never reaches the brief                  | A takeaway needs at least four words beyond the session title; rejected notes are excluded                    | `convex/model/takeawaySubstance.ts`, `convex/brief.ts`         |
+| A cancelled session is never assigned                      | Planning input drops it; repair drops assignments that pointed at it                                          | `convex/model/loadOptimizerInput.ts`                           |
+| Nobody else's day changes without consent                  | New assignments for others only through an accepted cover request                                             | `convex/model/coverAcceptance.ts`                              |
+| The verified run cannot drift                              | A frozen workspace refuses every write from the app, and inbound replies are stored but not applied           | `convex/model/frozenConference.ts`                             |
+| A reply survives a brief OpenAI outage                     | Parsing is queued through the action retrier; only network errors, 429 and 5xx are retried, up to three times | `convex/model/replyRetrier.ts`, `convex/model/openaiClient.ts` |
+| A retried reply is never applied twice                     | Applying a reply or a cover answer to an already handled event is a no-op, checked inside the write           | `convex/emailReplies.ts`                                       |
+| Brief generation cannot be spammed                         | A per-conference token bucket, checked before any model call                                                  | `convex/model/rateLimits.ts`                                   |
+| Demo workspaces stay separate                              | Each is reached only by its own id and is removed after 24 hours                                              | `convex/guest.ts`                                              |
 
 ## The verified production run
 
@@ -516,7 +521,7 @@ The full schema, with every index, is in `convex/schema.ts`.
 | Layer          | Choice                                                                                   |
 | -------------- | ---------------------------------------------------------------------------------------- |
 | Backend        | Convex: database, reactive queries, mutations, actions, HTTP routes, scheduler and crons |
-| Components     | static-hosting, workflow, workpool, firecrawl-convex                                     |
+| Components     | static-hosting, workflow, workpool, firecrawl-convex, rate-limiter, action-retrier       |
 | Scraping       | Firecrawl                                                                                |
 | Language model | OpenAI Responses API with structured outputs, `gpt-5.4-mini`                             |
 | Email          | AgentMail REST API, Svix-signed inbound webhooks                                         |
@@ -568,7 +573,7 @@ minutes as sessions end, and guest workspaces older than 24 hours are removed ev
 
 ## Testing
 
-**49 test files and 366 tests**, run on every push in GitHub Actions.
+**51 test files and 375 tests**, run on every push in GitHub Actions.
 
 | Folder               | What it covers                                                                                                                                     |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |

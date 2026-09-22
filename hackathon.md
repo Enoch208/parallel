@@ -75,23 +75,25 @@ hiding it.
 
 ## What each sponsor does
 
-| Sponsor       | What it does here                                                                                                                                                                        | Where                                                       |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| **Convex**    | Database, reactive queries, the optimizer inside the mutation that writes the plan, the revision guard, the webhook endpoint, crons, four mounted components, and the static site itself | `convex/plan.ts`, `convex/assignments.ts`, `convex/http.ts` |
-| **Firecrawl** | Scrapes the public agenda page through the official Firecrawl Convex component; every session keeps its source URL, fetch time and content hash                                          | `convex/model/firecrawlComponent.ts`                        |
-| **OpenAI**    | Normalizes scraped markdown into sessions, scores each session against the team's goals, parses email replies, and writes the brief                                                      | `convex/model/openaiClient.ts`                              |
-| **AgentMail** | One shared inbox: plan emails out, replies in through a signature-verified webhook, cover requests and the brief                                                                         | `convex/model/agentmailClient.ts`, `convex/http.ts`         |
+| Sponsor       | What it does here                                                                                                                                                                       | Where                                                       |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| **Convex**    | Database, reactive queries, the optimizer inside the mutation that writes the plan, the revision guard, the webhook endpoint, crons, six mounted components, and the static site itself | `convex/plan.ts`, `convex/assignments.ts`, `convex/http.ts` |
+| **Firecrawl** | Scrapes the public agenda page through the official Firecrawl Convex component; every session keeps its source URL, fetch time and content hash                                         | `convex/model/firecrawlComponent.ts`                        |
+| **OpenAI**    | Normalizes scraped markdown into sessions, scores each session against the team's goals, parses email replies, and writes the brief                                                     | `convex/model/openaiClient.ts`                              |
+| **AgentMail** | One shared inbox: plan emails out, replies in through a signature-verified webhook, cover requests and the brief                                                                        | `convex/model/agentmailClient.ts`, `convex/http.ts`         |
 
 ## Convex components
 
-Four components are mounted in `convex/convex.config.ts`:
+Six components are mounted in `convex/convex.config.ts`:
 
-| Component                     | What it carries                                                                                                                                                                   |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@convex-dev/static-hosting`  | Serves the Vite app from `convex.site`, so the whole product is one deployment                                                                                                    |
-| `@convex-dev/workflow`        | The agenda import runs as a durable workflow: scrape, record provenance, extract, insert, wait for scoring. Each step is named and retried, and the UI shows which one is running |
-| `@convex-dev/workpool`        | Scoring runs in its own pool, so a long scoring run never starves the rest of the backend                                                                                         |
-| `@firecrawl/firecrawl-convex` | Scraping, with the API key declared as component env rather than read from the outer deployment                                                                                   |
+| Component                     | What it carries                                                                                                                                                                                                                                                                                                              |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@convex-dev/static-hosting`  | Serves the Vite app from `convex.site`, so the whole product is one deployment                                                                                                                                                                                                                                               |
+| `@convex-dev/workflow`        | The agenda import runs as a durable workflow: scrape, record provenance, extract, insert, wait for scoring. Each step is named and retried, and the UI shows which one is running                                                                                                                                            |
+| `@convex-dev/workpool`        | Scoring runs in its own pool, so a long scoring run never starves the rest of the backend                                                                                                                                                                                                                                    |
+| `@firecrawl/firecrawl-convex` | Scraping, with the API key declared as component env rather than read from the outer deployment                                                                                                                                                                                                                              |
+| `@convex-dev/rate-limiter`    | Brief generation, the one public action that spends model tokens on demand, takes a token from a per-conference bucket (three at once, six an hour) before any model call; a refused attempt says when to retry. `convex/model/rateLimits.ts`, `convex/brief.ts`                                                             |
+| `@convex-dev/action-retrier`  | Inbound email parsing. The webhook queues each reply through it, so a network failure, 429 or 5xx from OpenAI is retried up to three times with exponential backoff; other failures are not retried and wait on the Evidence screen for a person. `convex/model/replyRetrier.ts`, `convex/emailReplies.ts`, `convex/http.ts` |
 
 ### `@agentmail/convex` was evaluated and rejected
 
@@ -156,9 +158,11 @@ cost estimate, which the team lead enters and which is captioned as their own fi
 | Takeaways by reply           | `convex/emailReplies.ts`                           | Answering a plan email with what you learned files a note against that session                           |
 | Incremental rescoring        | `convex/scoringReuse.ts`, `convex/scoring.ts`      | Re-importing an unchanged agenda spends nothing on the model                                             |
 | Scheduler and crons          | `convex/crons.ts`                                  | Takeaway prompts become due when a session ends                                                          |
-| Guest workspaces             | `convex/guest.ts`                                  | Your clicks never change another visitor's board                                                         |
+| Demo workspaces              | `convex/guest.ts`                                  | Each is reached only by its own id and is removed after 24 hours                                         |
 
 ## What the solver actually proves
+
+Repair preserves existing assignments that remain feasible; a separate minimum-disruption analysis computes the minimum set of teammates whose schedules cannot all remain unchanged, and Parallel never adds a new cover assignment until that teammate says yes.
 
 Two modes, and the product says which one it used. On a small enough instance a branch-and-bound
 search explores the whole space and reports **proven optimal**. On a larger one it reports the best
@@ -179,7 +183,7 @@ exactly as a k-track interval scheduling problem rather than estimated.
 The engine is verified by randomized property testing rather than a handful of fixtures: generated
 instances checked for hard-constraint violations, exact-versus-brute-force comparisons with zero
 disagreements, and determinism checked by running the same instance twice and by reversing input
-order. **49 test files, 366 tests, passing locally and in GitHub Actions on 21 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
+order. **51 test files, 375 tests, passing locally and in GitHub Actions on 22 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
 excluding proposed cover that has not been accepted. The tests found that beam search alone is genuinely
 suboptimal on a measurable share of instances, which is why the exact mode exists.
 
