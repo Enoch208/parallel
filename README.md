@@ -464,6 +464,22 @@ replies and the takeaway were written for the run. The other three teammates are
 whose addresses do not receive mail, and the board reports its one duplicate attendance rather
 than hiding it.
 
+### A second run: four takeaways, one brief
+
+**[Open the board](https://joyous-akita-768.convex.site/board?c=js75bc7kx7r9c851cfzmhygvtx8evqsn)** · **[read its brief](https://joyous-akita-768.convex.site/brief?c=js75bc7kx7r9c851cfzmhygvtx8evqsn)** — a second permanent production
+workspace on the same public ViVE agenda, built through the same flow and also read-only.
+
+- Team Goal Coverage 59 for the same teammates each attending only their own picks, a computed
+  baseline, against 90.4 for the coordinated plan, across 9 of 9 sessions.
+- A teammate replied that he could not make a session; the repair moved one person, and another
+  teammate took the session by replying YES.
+- Four teammates each replied by email with a takeaway. OpenAI wrote the brief from those four: 8
+  claims across the team's 4 goals, every one citing the takeaway it came from, none dropped.
+  AgentMail delivered it to the team lead.
+
+In this run all four teammates are plus-address aliases of the team lead's own inbox, and the lead
+wrote every reply, including the takeaways. The email is real; the conference was played out.
+
 ## Screens
 
 | Route       | What it is for                                                                                                                                                             |
@@ -646,9 +662,10 @@ share of instances, which is why the exact mode exists.
 - **Agenda changes have no review screen yet.** The watcher re-scrapes watched agendas, classifies
   every difference as added, moved, renamed, cancelled or room changed, and logs it for the lead,
   but applying those changes is not yet a button in the app.
-- **The production brief rests on one takeaway.** Only one teammate with a working inbox reported
-  back, so for the other goals the model fell back to claims that only cite the agenda. They are
-  sourced, but they add little.
+- **Neither production brief reflects a real team's range of input.** The first verified run's
+  brief rests on one takeaway, so for the other goals the model fell back to claims that only cite
+  the agenda. The second run's brief rests on four takeaways, but one person wrote all four while
+  playing four teammates.
 - **Large agendas are bounded, not proven.** Past the exact search limit the solver reports "best
   found, not proven optimal" with the size of the gap. The demo agenda is just past that threshold.
 - **A teammate can be left free.** The optimizer will not create duplicate attendance that adds no

@@ -64,6 +64,22 @@ Two of the five teammates are real people with real inboxes. The other three are
 addresses do not receive mail, and the board reports the one duplicate attendance rather than
 hiding it.
 
+## A second run: four takeaways, one brief
+
+**[Open the board](https://joyous-akita-768.convex.site/board?c=js75bc7kx7r9c851cfzmhygvtx8evqsn)** · **[read its brief](https://joyous-akita-768.convex.site/brief?c=js75bc7kx7r9c851cfzmhygvtx8evqsn)** — a second permanent production
+workspace on the same public ViVE agenda, built through the same flow and also read-only.
+
+- Team Goal Coverage 59 for the same teammates each attending only their own picks, a computed
+  baseline, against 90.4 for the coordinated plan, across 9 of 9 sessions.
+- A teammate replied that he could not make a session; the repair moved one person, and another
+  teammate took the session by replying YES.
+- Four teammates each replied by email with a takeaway. OpenAI wrote the brief from those four: 8
+  claims across the team's 4 goals, every one citing the takeaway it came from, none dropped.
+  AgentMail delivered it to the team lead.
+
+In this run all four teammates are plus-address aliases of the team lead's own inbox, and the lead
+wrote every reply, including the takeaways. The email is real; the conference was played out.
+
 ## Judge path, 60 seconds
 
 1. Open **[/judges](https://joyous-akita-768.convex.site/judges)**. The top row reads the verified
@@ -233,9 +249,10 @@ suboptimal on a measurable share of instances, which is why the exact mode exist
 - **Not every provider call is rate-limited.** The older direct `importAgenda` action, scoring and
   the agenda change checks are public and bounded only by provider quotas; the limits cover brief
   generation, demo runs, workflow imports and judge emails.
-- The brief in the production run rests on one takeaway, because only one teammate with a working
-  inbox reported back. For goals nobody reported on, the model fell back to claims that only cite
-  the agenda ("the agenda included a session titled …"). They are sourced, but they add little.
+- The first verified run's brief rests on one takeaway, because only one teammate with a working
+  inbox reported back; for the other goals the model fell back to claims that only cite the agenda.
+  The second run's brief rests on four takeaways, but one person wrote all four while playing four
+  teammates, so neither brief reflects a real team's range of input.
 - On a large agenda the solver runs out of search budget and reports "best found, not proven
   optimal" with the size of the gap, rather than claiming an optimum it has not proved. The demo
   agenda is just past that threshold.
