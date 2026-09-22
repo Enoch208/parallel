@@ -14,7 +14,8 @@ https://github.com/user-attachments/assets/19891333-4520-40de-a375-207f92427ae2
 - **Demo video (2:40):** https://youtu.be/dxzxkJJZu2E
 - **Live app:** https://joyous-akita-768.convex.site
 - **Judge path:** [`/judges`](https://joyous-akita-768.convex.site/judges) runs the whole loop on a
-  workspace of your own, then lets you try to break it
+  workspace of your own, lets you break its plan with an email of your own, then lets you try to
+  break the guards
 - **Verified real run:**
   [the production board](https://joyous-akita-768.convex.site/board?c=js711hd3g819z5kw11bv8ntqm58erbt5),
   also one click from `/judges`
@@ -179,14 +180,14 @@ re-checks its own rules.
 
 ### Convex components
 
-| Component                     | What it carries                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@convex-dev/static-hosting`  | Serves the built Vite app from `convex.site` with SPA fallback, so the product is a single deployment                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `@convex-dev/workflow`        | Runs the agenda import as named, durable steps; the provider steps retry with backoff and the UI shows the current step                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `@convex-dev/workpool`        | Runs scoring in its own pool, two at a time with up to three attempts, so a long scoring run never starves the backend                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `@firecrawl/firecrawl-convex` | Does the scraping, with its API key declared as component environment rather than read from the outer deployment                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `@convex-dev/rate-limiter`    | Bounds the public operations that spend money or create workspaces, checked before any work: brief generation per conference (three at once, six an hour), demo runs per browser (five at once, ten an hour) and agenda imports per browser (two at once, three an hour). The browser visitor id is accidental-abuse and quota protection, not authentication or a hard security boundary, and there is no global cap. `convex/model/rateLimits.ts`, `convex/model/visitorKey.ts`, `convex/brief.ts`, `convex/judges.ts`, `convex/importWorkflow.ts` |
-| `@convex-dev/action-retrier`  | Inbound email parsing. Each reply is saved and its parse queued in the same mutation; network errors, 429 and 5xx from OpenAI are retried up to three times with exponential backoff, and the retrier's completion callback marks the reply handled, needing review or failed. A reply whose parsing failed stays on the Evidence screen with a Retry parsing button. `convex/replyParsing.ts`, `convex/model/replyRetrier.ts`, `convex/emailIngest.ts`, `convex/emailReplies.ts`                                                                    |
+| Component                     | What it carries                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@convex-dev/static-hosting`  | Serves the built Vite app from `convex.site` with SPA fallback, so the product is a single deployment                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `@convex-dev/workflow`        | Runs the agenda import as named, durable steps; the provider steps retry with backoff and the UI shows the current step                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `@convex-dev/workpool`        | Runs scoring in its own pool, two at a time with up to three attempts, so a long scoring run never starves the backend                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `@firecrawl/firecrawl-convex` | Does the scraping, with its API key declared as component environment rather than read from the outer deployment                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `@convex-dev/rate-limiter`    | Bounds the public operations that spend money or create workspaces, checked before any work: brief generation per conference (three at once, six an hour), demo runs per browser (five at once, ten an hour), agenda imports per browser (two at once, three an hour) and judge emails per demo code (three in ten minutes). The browser visitor id is accidental-abuse and quota protection, not authentication or a hard security boundary, and there is no global cap. `convex/model/rateLimits.ts`, `convex/model/visitorKey.ts`, `convex/brief.ts`, `convex/judges.ts`, `convex/importWorkflow.ts` |
+| `@convex-dev/action-retrier`  | Inbound email parsing. Each reply is saved and its parse queued in the same mutation; network errors, 429 and 5xx from OpenAI are retried up to three times with exponential backoff, and the retrier's completion callback marks the reply handled, needing review or failed. A reply whose parsing failed stays on the Evidence screen with a Retry parsing button. `convex/replyParsing.ts`, `convex/model/replyRetrier.ts`, `convex/emailIngest.ts`, `convex/emailReplies.ts`                                                                                                                       |
 
 `@agentmail/convex` was evaluated and rejected. Its `defineComponent("agentmail")` declares no
 `env` block, so `process.env.AGENTMAIL_API_KEY` is undefined inside the component sandbox whatever
@@ -254,6 +255,29 @@ sequenceDiagram
     H->>DB: Cover accepted after fresh feasibility checks
     DB-->>B: Coverage recomputed on every screen
 ```
+
+### Try it with your own email
+
+After **Run the demo**, `/judges` offers a prefilled email: the Parallel inbox, a subject carrying a
+one-use code, and a message saying one demo teammate cannot make one session. A judge sends it from
+any inbox and watches the card move from waiting to read to "plan changed", then presses **Repair
+the plan** on the board. Parallel never repairs on its own and never emails the judge back.
+
+The code is 128 random bits, stored only as a SHA-256 hash, scoped to one demo teammate for two
+hours, and allowed to apply only `cant_attend`; a pin, takeaway, question or YES stays for review.
+Normal routing runs first and is unchanged, and the code is never accepted for a real or frozen
+workspace. It is redacted from the stored subject, body and raw payload, the sender is masked on
+Evidence, three emails per code are read in ten minutes, and the first applied change revokes it
+(`convex/judgeEmail.ts`, `convex/model/judgeToken.ts`, `convex/emailIngest.ts`).
+
+On production on 22 September 2026, a real email sent from Gmail with the prefilled subject reached
+the AgentMail webhook, was routed by its code to that demo workspace alone, and was read as
+`cant_attend` at 0.99 confidence with its exact sentence. It applied once: one availability block,
+the workspace revision moved from 1 to 2, and the board went stale. The code was then revoked, the
+stored subject reads `[JD-redacted]`, and Evidence shows the sender as `e•••@gmail.com`. Pressing
+**Repair the plan** returned a current plan at Team Goal Coverage 99.8 with 12 unique sessions and no
+duplicates. Replaying the same reply through the step a webhook redelivery runs, a second parse and a direct
+write changed nothing.
 
 ### How a reply is judged
 
@@ -411,6 +435,7 @@ workspace and deletes it afterwards.
 | Expensive public actions are bounded                       | Token buckets per conference for the brief and per browser visitor id for demo runs and imports, checked before any work; quota protection, not authentication, with no global cap | `convex/model/rateLimits.ts`                                   |
 | A saved reply is never left unread                         | Saving a reply and queuing its parse happen in one mutation; a redelivery repairs a missing parse; a reply whose parsing failed stays on Evidence with Retry parsing               | `convex/replyParsing.ts`, `convex/emailIngest.ts`              |
 | Demo workspaces stay separate                              | Each is reached only by its own id and is removed after 24 hours                                                                                                                   | `convex/guest.ts`                                              |
+| A judge's email can make one change, in one demo workspace | A one-use code stored only as a hash, scoped to one demo teammate for two hours, limited to `cant_attend`, redacted from stored mail and revoked once it applies                   | `convex/judgeEmail.ts`, `convex/model/judgeToken.ts`           |
 
 ## The verified production run
 
@@ -441,16 +466,16 @@ than hiding it.
 
 ## Screens
 
-| Route       | What it is for                                                                                                                             |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/`         | The landing page                                                                                                                           |
-| `/board`    | One lane per teammate, the three counters, Optimize, Repair, claim and release by hand, and _How Parallel worked_                          |
-| `/agenda`   | Import a public agenda and watch the workflow's current step                                                                               |
-| `/goals`    | The team's weighted goals and every session's score against them                                                                           |
-| `/notes`    | Takeaways, with approve and reject                                                                                                         |
-| `/brief`    | What the trip returned, the brief itself, its recipients and **Send the brief**                                                            |
-| `/evidence` | Every number traced to its row: the page it was scraped from, the reason the optimizer stored, the sentence a teammate wrote               |
-| `/judges`   | The verified run's measured impact, **Run the demo** on a workspace of your own, **Open verified production run**, and **Try to break it** |
+| Route       | What it is for                                                                                                                                                             |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`         | The landing page                                                                                                                                                           |
+| `/board`    | One lane per teammate, the three counters, Optimize, Repair, claim and release by hand, and _How Parallel worked_                                                          |
+| `/agenda`   | Import a public agenda and watch the workflow's current step                                                                                                               |
+| `/goals`    | The team's weighted goals and every session's score against them                                                                                                           |
+| `/notes`    | Takeaways, with approve and reject                                                                                                                                         |
+| `/brief`    | What the trip returned, the brief itself, its recipients and **Send the brief**                                                                                            |
+| `/evidence` | Every number traced to its row: the page it was scraped from, the reason the optimizer stored, the sentence a teammate wrote                                               |
+| `/judges`   | The verified run's measured impact, **Run the demo** on a workspace of your own, **Try it with your own email**, **Open verified production run**, and **Try to break it** |
 
 Any screen accepts `?c=<conference id>` to open a specific workspace, which is how the production
 run above is linked. Seeded demo workspaces are labelled as demo data on screen, and _How Parallel
@@ -574,7 +599,7 @@ minutes as sessions end, and guest workspaces older than 24 hours are removed ev
 
 ## Testing
 
-**54 test files and 388 tests**, run on every push in GitHub Actions.
+**55 test files and 402 tests**, run on every push in GitHub Actions.
 
 | Folder               | What it covers                                                                                                                                     |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |

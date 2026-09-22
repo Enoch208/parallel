@@ -21,7 +21,7 @@ come back as ordinary replies.
 | OpenAI       | Structured outputs in `convex/model/openaiClient.ts`, used by `convex/importWorkflow.ts`, `convex/scoring.ts`, `convex/emailReplies.ts` and `convex/brief.ts`                                                                                                                      |
 | Firecrawl    | The official Convex component in `convex/model/firecrawlComponent.ts`; content hashes in `convex/model/firecrawlClient.ts`; change detection in `convex/agendaWatch.ts`                                                                                                            |
 | AgentMail    | A Svix-verified webhook in `convex/http.ts` and `convex/model/svix.ts`; sends in `convex/emailSend.ts` through `convex/model/agentmailClient.ts`                                                                                                                                   |
-| Proof        | [The verified production run](#the-verified-production-run), the 2:40 video, and 54 test files with 388 tests                                                                                                                                                                      |
+| Proof        | [The verified production run](#the-verified-production-run), the 2:40 video, and 55 test files with 402 tests                                                                                                                                                                      |
 
 ## The verified production run
 
@@ -74,16 +74,36 @@ hiding it.
    as they happen: everyone planning alone, the optimizer splitting the team, a teammate replying
    that they cannot make a session, the repair moving only that person, and the best-placed
    cover candidate being proposed. The reply is simulated and this path sends no email.
-2. Press **Open this workspace on the board** to land on the live board for that same workspace.
+2. Under **Try it with your own email**, press **Open in my email app** and send the prefilled
+   message from any inbox, or copy the address, subject and message. The subject carries a one-use
+   code for that demo workspace. When the email is read, the status line says the plan changed;
+   open the board and press **Repair the plan**.
+3. Press **Open this workspace on the board** to land on the live board for that same workspace.
    **Open verified production run**, beside **Run the demo**, opens the real run instead.
-3. Open **How Parallel worked** at the bottom of the board to see which service did what, and how
+4. Open **How Parallel worked** at the bottom of the board to see which service did what, and how
    long each step took.
-4. Open a second tab on the same board. Press **Release** on a card in one tab and watch the other
+5. Open a second tab on the same board. Press **Release** on a card in one tab and watch the other
    update. A write against a stale plan is refused with a message that says what to do.
-5. Back on **/judges**, press **Run the attacks** under _Try to break it_. Four guards are attacked
+6. Back on **/judges**, press **Run the attacks** under _Try to break it_. Four guards are attacked
    through the production code on a throwaway workspace that is deleted afterwards: the same webhook
    delivered twice, a write from a browser whose plan has moved on, a model quote that paraphrases
    the email, and a send retried with the same key. Each reports what it refused and why.
+
+### The judge email path, verified on production
+
+The code in the subject is 128 random bits, stored only as a SHA-256 hash, scoped to one demo
+teammate for two hours and allowed to apply only `cant_attend`. Normal teammate routing runs first
+and is unchanged; the code is tried only when nothing else matched, and never on a workspace that is
+real or frozen. Three emails per code in ten minutes; the first applied change revokes it.
+
+On production on 22 September 2026, a real email sent from Gmail with the prefilled subject reached
+the AgentMail webhook, was routed by its code to that demo workspace alone, and was read as
+`cant_attend` at 0.99 confidence with its exact sentence. It applied once: one availability block,
+the workspace revision moved from 1 to 2, and the board went stale. The code was then revoked, the
+stored subject reads `[JD-redacted]`, and Evidence shows the sender as `e•••@gmail.com`. Pressing
+**Repair the plan** returned a current plan at Team Goal Coverage 99.8 with 12 unique sessions and no
+duplicates. Replaying the same reply through the step a webhook redelivery runs, a second parse and a direct
+write changed nothing.
 
 ## What each sponsor does
 
@@ -98,14 +118,14 @@ hiding it.
 
 Six components are mounted in `convex/convex.config.ts`:
 
-| Component                     | What it carries                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@convex-dev/static-hosting`  | Serves the Vite app from `convex.site`, so the whole product is one deployment                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `@convex-dev/workflow`        | The agenda import runs as a durable workflow: scrape, record provenance, extract, insert, wait for scoring. Each step is named and retried, and the UI shows which one is running                                                                                                                                                                                                                                                                                                                                                                    |
-| `@convex-dev/workpool`        | Scoring runs in its own pool, so a long scoring run never starves the rest of the backend                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `@firecrawl/firecrawl-convex` | Scraping, with the API key declared as component env rather than read from the outer deployment                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `@convex-dev/rate-limiter`    | Bounds the public operations that spend money or create workspaces, checked before any work: brief generation per conference (three at once, six an hour), demo runs per browser (five at once, ten an hour) and agenda imports per browser (two at once, three an hour). The browser visitor id is accidental-abuse and quota protection, not authentication or a hard security boundary, and there is no global cap. `convex/model/rateLimits.ts`, `convex/model/visitorKey.ts`, `convex/brief.ts`, `convex/judges.ts`, `convex/importWorkflow.ts` |
-| `@convex-dev/action-retrier`  | Inbound email parsing. Each reply is saved and its parse queued in the same mutation; network errors, 429 and 5xx from OpenAI are retried up to three times with exponential backoff, and the retrier's completion callback marks the reply handled, needing review or failed. A reply whose parsing failed stays on the Evidence screen with a Retry parsing button. `convex/replyParsing.ts`, `convex/model/replyRetrier.ts`, `convex/emailIngest.ts`, `convex/emailReplies.ts`                                                                    |
+| Component                     | What it carries                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@convex-dev/static-hosting`  | Serves the Vite app from `convex.site`, so the whole product is one deployment                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `@convex-dev/workflow`        | The agenda import runs as a durable workflow: scrape, record provenance, extract, insert, wait for scoring. Each step is named and retried, and the UI shows which one is running                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `@convex-dev/workpool`        | Scoring runs in its own pool, so a long scoring run never starves the rest of the backend                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `@firecrawl/firecrawl-convex` | Scraping, with the API key declared as component env rather than read from the outer deployment                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `@convex-dev/rate-limiter`    | Bounds the public operations that spend money or create workspaces, checked before any work: brief generation per conference (three at once, six an hour), demo runs per browser (five at once, ten an hour), agenda imports per browser (two at once, three an hour) and judge emails per demo code (three in ten minutes). The browser visitor id is accidental-abuse and quota protection, not authentication or a hard security boundary, and there is no global cap. `convex/model/rateLimits.ts`, `convex/model/visitorKey.ts`, `convex/brief.ts`, `convex/judges.ts`, `convex/importWorkflow.ts` |
+| `@convex-dev/action-retrier`  | Inbound email parsing. Each reply is saved and its parse queued in the same mutation; network errors, 429 and 5xx from OpenAI are retried up to three times with exponential backoff, and the retrier's completion callback marks the reply handled, needing review or failed. A reply whose parsing failed stays on the Evidence screen with a Retry parsing button. `convex/replyParsing.ts`, `convex/model/replyRetrier.ts`, `convex/emailIngest.ts`, `convex/emailReplies.ts`                                                                                                                       |
 
 ### `@agentmail/convex` was evaluated and rejected
 
@@ -195,7 +215,7 @@ exactly as a k-track interval scheduling problem rather than estimated.
 The engine is verified by randomized property testing rather than a handful of fixtures: generated
 instances checked for hard-constraint violations, exact-versus-brute-force comparisons with zero
 disagreements, and determinism checked by running the same instance twice and by reversing input
-order. **54 test files, 388 tests, passing locally and in GitHub Actions on 22 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
+order. **55 test files, 402 tests, passing locally and in GitHub Actions on 22 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
 excluding proposed cover that has not been accepted. The tests found that beam search alone is genuinely
 suboptimal on a measurable share of instances, which is why the exact mode exists.
 
@@ -522,3 +542,7 @@ The entries below cover substantive feature, bug-fix and test commits from the r
 ### 2026-09-22 - `f69750d`
 
 [email] Saved each reply and queued its parse in one write, repaired a missing parse on webhook redelivery, and kept a reply whose parsing failed on Evidence with a Retry parsing button.
+
+### 2026-09-22 - `a6d7403`
+
+[judges] Let a judge break a demo plan with an email of their own, through a one-use, hashed, `cant_attend`-only code that expires in two hours.
