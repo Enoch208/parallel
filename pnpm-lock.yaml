@@ -11,6 +11,9 @@ importers:
       '@agentmail/convex':
         specifier: 0.1.0
         version: 0.1.0(convex-helpers@0.1.124(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)(zod@4.6.5))(convex@1.46.0(react@19.3.0))
+      '@convex-dev/rate-limiter':
+        specifier: 0.4.0
+        version: 0.4.0(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)(zod@4.6.5)
       '@convex-dev/workflow':
         specifier: 0.4.8
         version: 0.4.8(@convex-dev/workpool@0.4.12(convex-helpers@0.1.124(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)(zod@4.6.5))(convex@1.46.0(react@19.3.0))(react@19.3.0))(convex-helpers@0.1.124(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)(zod@4.6.5))(convex@1.46.0(react@19.3.0))
@@ -192,6 +195,20 @@ packages:
     peerDependencies:
       convex: ^1.36.1
       react: ^18.3.1 || ^19.0.0
+
+  '@convex-dev/batch-worker@0.3.4':
+    resolution: {integrity: sha512-CKeOrPFsPoIKozMNP/qKExSwE6vd63QDKbZIbchK+P3S7fyGuFjRLbTg6+QmC/mzOjn6I5N8zo+k/SdXqeaA2g==}
+    peerDependencies:
+      convex: ^1.43.0
+
+  '@convex-dev/rate-limiter@0.4.0':
+    resolution: {integrity: sha512-AEXbo8+pMT1bPlOJiofmue55EoiFp9ygCcEnckx+RENoPjRYEg5jiihAtaD5TKDwdmHJyvLwNQ1h+MbhgvMyOA==}
+    peerDependencies:
+      convex: ^1.43.0
+      react: ^18.2.0 || ^19.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
 
   '@convex-dev/static-hosting@0.2.1':
     resolution: {integrity: sha512-QMcfKUOB8dHeLa81xzk2GEIn7LzhEvtdgYhfFpIFer6uE/+xMStDxHAZsX5h1qsttYi7wNbEKAMf7MfOQ7ZrMw==}
@@ -1735,6 +1752,29 @@ snapshots:
     dependencies:
       convex: 1.46.0(react@19.3.0)
       react: 19.3.0
+
+  '@convex-dev/batch-worker@0.3.4(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)(zod@4.6.5)':
+    dependencies:
+      convex: 1.46.0(react@19.3.0)
+      convex-helpers: 0.1.124(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)(zod@4.6.5)
+    transitivePeerDependencies:
+      - '@standard-schema/spec'
+      - hono
+      - react
+      - typescript
+      - zod
+
+  '@convex-dev/rate-limiter@0.4.0(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)(zod@4.6.5)':
+    dependencies:
+      '@convex-dev/batch-worker': 0.3.4(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)(zod@4.6.5)
+      convex: 1.46.0(react@19.3.0)
+    optionalDependencies:
+      react: 19.3.0
+    transitivePeerDependencies:
+      - '@standard-schema/spec'
+      - hono
+      - typescript
+      - zod
 
   '@convex-dev/static-hosting@0.2.1(convex@1.46.0(react@19.3.0))(react@19.3.0)':
     dependencies:

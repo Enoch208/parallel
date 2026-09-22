@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@agentmail/convex": "0.1.0",
+    "@convex-dev/rate-limiter": "0.4.0",
     "@convex-dev/workflow": "0.4.8",
     "@convex-dev/workpool": "0.4.12",
     "@firecrawl/firecrawl-convex": "0.1.1",

@@ -15,6 +15,7 @@ import {
 import type { BriefGoalInput, BriefNoteInput, BriefSessionInput } from "./model/briefSchema";
 import { assertWritable } from "./model/frozenConference";
 import { assertWritableFromAction } from "./frozen";
+import { rateLimited, rateLimiter } from "./model/rateLimits";
 
 interface BriefInputs {
   readonly eventName: string;
@@ -152,6 +153,18 @@ export const generateBrief = action({
   },
   handler: async (ctx, args): Promise<GenerateBriefResult> => {
     await assertWritableFromAction(ctx, args.conferenceId);
+
+    const allowance = await rateLimiter.limit(ctx, "briefGeneration", {
+      key: args.conferenceId,
+    });
+
+    if (!allowance.ok) {
+      throw rateLimited(
+        "This conference's brief has been rewritten several times in the last few minutes.",
+        allowance.retryAfter,
+      );
+    }
+
     const apiKey = requireOpenAiKey();
     const inputs: BriefInputs = await ctx.runQuery(internal.brief.loadBriefInputs, {
       conferenceId: args.conferenceId,

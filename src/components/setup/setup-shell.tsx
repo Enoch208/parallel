@@ -4,8 +4,21 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Alert02Icon } from "@hugeicons/core-free-icons";
 
 export function errorMessage(error: unknown): string {
-  if (error instanceof ConvexError && typeof error.data === "string") {
-    return error.data;
+  if (error instanceof ConvexError) {
+    const data: unknown = error.data;
+
+    if (typeof data === "string") {
+      return data;
+    }
+
+    if (
+      typeof data === "object" &&
+      data !== null &&
+      "message" in data &&
+      typeof data.message === "string"
+    ) {
+      return data.message;
+    }
   }
 
   if (error instanceof Error && error.message.length > 0) {

@@ -4,6 +4,7 @@ import staticHosting from "@convex-dev/static-hosting/convex.config";
 import workflow from "@convex-dev/workflow/convex.config";
 import workpool from "@convex-dev/workpool/convex.config";
 import firecrawl from "@firecrawl/firecrawl-convex/convex.config";
+import rateLimiter from "@convex-dev/rate-limiter/convex.config";
 
 const app = defineApp({
   httpPrefix: "/api",
@@ -14,5 +15,6 @@ app.use(staticHosting, { httpPrefix: "/" });
 app.use(workflow);
 app.use(workpool, { name: "scoringPool" });
 app.use(firecrawl, { env: { FIRECRAWL_API_KEY: app.env.FIRECRAWL_API_KEY } });
+app.use(rateLimiter);
 
 export default app;
