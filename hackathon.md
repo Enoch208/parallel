@@ -10,6 +10,18 @@ come back as ordinary replies.
 - **Repo:** https://github.com/Enoch208/parallel
 - **Demo video (2:40):** https://youtu.be/dxzxkJJZu2E
 - **Launch post:** [the thread on X](https://x.com/dreyethh/status/2102150744862310756)
+- **Auth:** none — judge/demo workspaces are isolated by workspace ID and removed after 24 hours; teammates interact through email and never need an account.
+
+## At a glance
+
+| Criterion    | Where to look                                                                                                                                                                                                                                                                      |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Everyday use | Send four people to a conference and make sure they don't all learn the same thing. Teammates never open an app: they reply to email.                                                                                                                                              |
+| Convex       | 19 tables in `convex/schema.ts`; the optimizer inside the plan-writing mutation (`convex/plan.ts`); a durable import workflow (`convex/importWorkflow.ts`); a scoring workpool; three crons (`convex/crons.ts`); the scheduler; six mounted components (`convex/convex.config.ts`) |
+| OpenAI       | Structured outputs in `convex/model/openaiClient.ts`, used by `convex/importWorkflow.ts`, `convex/scoring.ts`, `convex/emailReplies.ts` and `convex/brief.ts`                                                                                                                      |
+| Firecrawl    | The official Convex component in `convex/model/firecrawlComponent.ts`; content hashes in `convex/model/firecrawlClient.ts`; change detection in `convex/agendaWatch.ts`                                                                                                            |
+| AgentMail    | A Svix-verified webhook in `convex/http.ts` and `convex/model/svix.ts`; sends in `convex/emailSend.ts` through `convex/model/agentmailClient.ts`                                                                                                                                   |
+| Proof        | [The verified production run](#the-verified-production-run), the 2:40 video, and 54 test files with 388 tests                                                                                                                                                                      |
 
 ## The verified production run
 
@@ -86,14 +98,14 @@ hiding it.
 
 Six components are mounted in `convex/convex.config.ts`:
 
-| Component                     | What it carries                                                                                                                                                                                                                                                                                                              |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@convex-dev/static-hosting`  | Serves the Vite app from `convex.site`, so the whole product is one deployment                                                                                                                                                                                                                                               |
-| `@convex-dev/workflow`        | The agenda import runs as a durable workflow: scrape, record provenance, extract, insert, wait for scoring. Each step is named and retried, and the UI shows which one is running                                                                                                                                            |
-| `@convex-dev/workpool`        | Scoring runs in its own pool, so a long scoring run never starves the rest of the backend                                                                                                                                                                                                                                    |
-| `@firecrawl/firecrawl-convex` | Scraping, with the API key declared as component env rather than read from the outer deployment                                                                                                                                                                                                                              |
-| `@convex-dev/rate-limiter`    | Brief generation, the one public action that spends model tokens on demand, takes a token from a per-conference bucket (three at once, six an hour) before any model call; a refused attempt says when to retry. `convex/model/rateLimits.ts`, `convex/brief.ts`                                                             |
-| `@convex-dev/action-retrier`  | Inbound email parsing. The webhook queues each reply through it, so a network failure, 429 or 5xx from OpenAI is retried up to three times with exponential backoff; other failures are not retried and wait on the Evidence screen for a person. `convex/model/replyRetrier.ts`, `convex/emailReplies.ts`, `convex/http.ts` |
+| Component                     | What it carries                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@convex-dev/static-hosting`  | Serves the Vite app from `convex.site`, so the whole product is one deployment                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `@convex-dev/workflow`        | The agenda import runs as a durable workflow: scrape, record provenance, extract, insert, wait for scoring. Each step is named and retried, and the UI shows which one is running                                                                                                                                                                                                                                                                                                                                                                    |
+| `@convex-dev/workpool`        | Scoring runs in its own pool, so a long scoring run never starves the rest of the backend                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `@firecrawl/firecrawl-convex` | Scraping, with the API key declared as component env rather than read from the outer deployment                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `@convex-dev/rate-limiter`    | Bounds the public operations that spend money or create workspaces, checked before any work: brief generation per conference (three at once, six an hour), demo runs per browser (five at once, ten an hour) and agenda imports per browser (two at once, three an hour). The browser visitor id is accidental-abuse and quota protection, not authentication or a hard security boundary, and there is no global cap. `convex/model/rateLimits.ts`, `convex/model/visitorKey.ts`, `convex/brief.ts`, `convex/judges.ts`, `convex/importWorkflow.ts` |
+| `@convex-dev/action-retrier`  | Inbound email parsing. Each reply is saved and its parse queued in the same mutation; network errors, 429 and 5xx from OpenAI are retried up to three times with exponential backoff, and the retrier's completion callback marks the reply handled, needing review or failed. A reply whose parsing failed stays on the Evidence screen with a Retry parsing button. `convex/replyParsing.ts`, `convex/model/replyRetrier.ts`, `convex/emailIngest.ts`, `convex/emailReplies.ts`                                                                    |
 
 ### `@agentmail/convex` was evaluated and rejected
 
@@ -183,7 +195,7 @@ exactly as a k-track interval scheduling problem rather than estimated.
 The engine is verified by randomized property testing rather than a handful of fixtures: generated
 instances checked for hard-constraint violations, exact-versus-brute-force comparisons with zero
 disagreements, and determinism checked by running the same instance twice and by reversing input
-order. **51 test files, 375 tests, passing locally and in GitHub Actions on 22 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
+order. **54 test files, 388 tests, passing locally and in GitHub Actions on 22 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
 excluding proposed cover that has not been accepted. The tests found that beam search alone is genuinely
 suboptimal on a measurable share of instances, which is why the exact mode exists.
 
@@ -202,3 +214,311 @@ suboptimal on a measurable share of instances, which is why the exact mode exist
 - Two sittings of a generic title with no surviving anchor — two "Lunch" entries where one
   survives in a different room at a different time — are reported as ambiguous rather than paired.
   That is deliberate: the alternative is guessing which one moved.
+
+## Build log
+
+The entries below cover substantive feature, bug-fix and test commits from the repository's Git history. Documentation-only, generated-types, CI and maintenance-only commits are omitted. The first commits on 2026-09-20 landed together as Parallel's initial public implementation push.
+
+### 2026-09-20 - `28bafc5`
+
+[app] Set up the Vite and React app with the shared design tokens.
+
+### 2026-09-20 - `f0e70d9`
+
+[app] Added the app shell: sidebar, mobile navigation and empty states that show no placeholder data.
+
+### 2026-09-20 - `ac3764b`
+
+[landing] Built landing page sections that tell the full story, beyond the hero.
+
+### 2026-09-20 - `ff81909`
+
+[convex] Defined the schema for the team plan, including the constraint revision guard.
+
+### 2026-09-20 - `1a385d7`
+
+[engine] Added the deterministic optimizer, with the coverage formula and constants fixed up front.
+
+### 2026-09-20 - `48fbfbe`
+
+[plan] Ran the optimizer inside the same mutation that writes the plan.
+
+### 2026-09-20 - `a92f7fd`
+
+[board] Added a seeded demo workspace and the queries the board reads.
+
+### 2026-09-20 - `d4c20d5`
+
+[board] Built the board's lanes, counters and stale-plan banner.
+
+### 2026-09-20 - `47374ac`
+
+[import] Turned a public agenda page into sessions that keep their provenance.
+
+### 2026-09-20 - `e2e7ffe`
+
+[scoring] Scored every session against the team's weighted goals.
+
+### 2026-09-20 - `b326160`
+
+[team] Added teammates, weighted goals and session preferences.
+
+### 2026-09-20 - `b7a74af`
+
+[email] Verified inbound webhook signatures before trusting a payload.
+
+### 2026-09-20 - `9f135e5`
+
+[email] Routed replies on the one shared inbox to the right teammate.
+
+### 2026-09-20 - `e0ccd76`
+
+[email] Applied a reply only when the model's quote is found word for word in the email.
+
+### 2026-09-20 - `d9db13a`
+
+[cover] Asked the best-placed teammate to cover a session and accepted their answer by email.
+
+### 2026-09-20 - `1ae7491`
+
+[app] Added placeholder routes for the agenda, goals, notes and brief screens.
+
+### 2026-09-20 - `bce5d59`
+
+[board] Wired the Release and Repair buttons to the mutations they name.
+
+### 2026-09-20 - `9ba2cb5`
+
+[convex] Added tables for the brief and for idempotent outbound sends.
+
+### 2026-09-20 - `eab3959`
+
+[guest] Added guest workspaces that can be reset and that expire.
+
+### 2026-09-20 - `58174a3`
+
+[email] Sent plan and cover emails, keyed so the same one is never sent twice.
+
+### 2026-09-20 - `6c21bec`
+
+[notes] Captured takeaways and found which teammates still owe one.
+
+### 2026-09-20 - `37ccda0`
+
+[brief] Wrote a brief grouped by goal that cannot cite anything it was not given.
+
+### 2026-09-20 - `07164e9`
+
+[setup] Built the screens for importing an agenda and setting the team's goals.
+
+### 2026-09-20 - `f5992df`
+
+[app] Recovered from a stale saved workspace instead of rendering nothing.
+
+### 2026-09-20 - `befd7e6`
+
+[plan] Made repair able to remove an assignment but never add one.
+
+### 2026-09-20 - `c92f43e`
+
+[landing] Removed the third-party CDN script behind the landing background.
+
+### 2026-09-20 - `d64a2a4`
+
+[knowledge] Built the screens for takeaways and the brief.
+
+### 2026-09-20 - `6005a32`
+
+[brief] Let the lead approve takeaways and choose who receives the brief.
+
+### 2026-09-20 - `83cbd2c`
+
+[knowledge] Let the lead hold a takeaway back and choose who the brief reaches.
+
+### 2026-09-20 - `144999f`
+
+[cover] Made the Ask button actually send the cover email.
+
+### 2026-09-20 - `1768349`
+
+[judges] Added one click that runs the whole loop on a fresh workspace.
+
+### 2026-09-20 - `fdd2a6e`
+
+[accessibility] Made the setup screens usable on a phone and by keyboard.
+
+### 2026-09-20 - `06eae39`
+
+[board] Stacked the lanes on a phone instead of requiring a sideways drag.
+
+### 2026-09-20 - `57d64aa`
+
+[agenda] Noticed when a published agenda changes and asked before acting on it.
+
+### 2026-09-20 - `1b7b662`
+
+[evidence] Let a judge follow any number back to its source.
+
+### 2026-09-20 - `b188afe`
+
+[engine] Proved a plan optimal when the search allows it, and said so when it could not.
+
+### 2026-09-20 - `f9a6e9b`
+
+[agenda] Watched published agendas on a schedule and on monitor notice.
+
+### 2026-09-20 - `c10c298`
+
+[firecrawl] Scraped agendas through the official Firecrawl Convex component.
+
+### 2026-09-20 - `ba114cb`
+
+[workflow] Ran the import as durable steps that survive a restart.
+
+### 2026-09-20 - `53d57a2`
+
+[scoring] Rescored only what actually changed.
+
+### 2026-09-20 - `b881cb5`
+
+[explain] Explained, with arithmetic, why one teammate was chosen over another.
+
+### 2026-09-20 - `f1d1382`
+
+[scoring] Made score reuse actually reuse scores rather than only measure that it could.
+
+### 2026-09-20 - `629d5c1`
+
+[agenda] Imported through the durable workflow and showed its progress on screen.
+
+### 2026-09-20 - `1b3ba29`
+
+[tests] Added adversarial tests that attack the guards instead of confirming them.
+
+### 2026-09-20 - `9fac91e`
+
+[email] Closed three ways a real reply could be silently lost or wrongly applied.
+
+### 2026-09-20 - `43dc066`
+
+[cover] Stopped accepting a cover into a plan that had moved on.
+
+### 2026-09-20 - `7cf4dba`
+
+[import] Refused an unusable timezone before any paid work started.
+
+### 2026-09-20 - `bb363a9`
+
+[email] Rendered a legacy bad timezone instead of throwing in the middle of a send.
+
+### 2026-09-20 - `b20bc43`
+
+[coverage] Stopped counting sessions nobody could physically attend.
+
+### 2026-09-20 - `6f0b216`
+
+[agenda] Told two sittings of the same talk apart.
+
+### 2026-09-20 - `6ace047`
+
+[agenda] Applied a confirmed agenda move to the stored session.
+
+### 2026-09-20 - `1ff1da7`
+
+[tests] Gave the exact-versus-brute-force comparison room to finish.
+
+### 2026-09-21 - `9f58001`
+
+[board] Opened a workspace straight from its URL.
+
+### 2026-09-21 - `0d0be87`
+
+[email] Matched a session by the words a teammate actually types.
+
+### 2026-09-21 - `5393e40`
+
+[board] Kept every teammate's lane on screen.
+
+### 2026-09-21 - `e793e36`
+
+[plan] Reported the coverage the saved repair actually achieved.
+
+### 2026-09-21 - `9025a40`
+
+[dependencies] Moved to the icon release whose file names match its own imports.
+
+### 2026-09-21 - `94b7f0c`
+
+[email] Turned a takeaway reply into a note on the session it names.
+
+### 2026-09-21 - `27c40e2`
+
+[cover] Broke ties between cover candidates by stated interest rather than by identifier.
+
+### 2026-09-21 - `b107aac`
+
+[email] Let a teammate pin a session by replying.
+
+### 2026-09-21 - `46afe17`
+
+[evidence] Let a person resolve a reply the parser could not place.
+
+### 2026-09-21 - `c32e255`
+
+[landing] Restored the animated background behind the hero.
+
+### 2026-09-21 - `8f2b084`
+
+[brief] Emailed the brief to the recipients the lead chose.
+
+### 2026-09-21 - `ec68b44`
+
+[import] Stopped reporting a short score matrix as a finished import.
+
+### 2026-09-21 - `ab5a833`
+
+[judges] Let anyone attack four guards live and watch them hold.
+
+### 2026-09-21 - `b8cadf1`
+
+[agenda] Retired a cancelled session instead of drawing it as live.
+
+### 2026-09-21 - `5240e8d`
+
+[email] Stopped filing a reply that only names a session as a takeaway.
+
+### 2026-09-21 - `4b9ce22`
+
+[brief] Stopped counting a rejected takeaway as captured.
+
+### 2026-09-21 - `7c26869`
+
+[judges] Led the judges page with the verified run and froze that run so it cannot drift.
+
+### 2026-09-21 - `1efa3be`
+
+[tests] Gave the brute-force property suites a time budget that fits their work.
+
+### 2026-09-22 - `dc9c78a`
+
+[board] Showed the day on each card when the agenda spans two days.
+
+### 2026-09-22 - `b391804`
+
+[judges] Answered, on screen, what zero-context testers could not.
+
+### 2026-09-22 - `dada3fb`
+
+[brief] Rate-limited brief generation per conference.
+
+### 2026-09-22 - `088c021`
+
+[email] Retried reply parsing through a brief OpenAI outage and made applying a reply idempotent, closing a path where re-parsing could mark an applied reply unhandled.
+
+### 2026-09-22 - `31b0458`
+
+[judges] Limited demo runs and agenda imports per browser, before any work starts.
+
+### 2026-09-22 - `f69750d`
+
+[email] Saved each reply and queued its parse in one write, repaired a missing parse on webhook redelivery, and kept a reply whose parsing failed on Evidence with a Retry parsing button.
