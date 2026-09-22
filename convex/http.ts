@@ -4,6 +4,7 @@ import { internal } from "./_generated/api";
 import { verifySvixSignature } from "./model/svix";
 import { readEventId, readEventType, readInboundMessage } from "./model/webhookPayload";
 import { readMonitoredUrl } from "./model/monitorPayload";
+import { hashJudgeToken, judgeTokenIn, redactJudgeToken } from "./model/judgeToken";
 
 const http = httpRouter();
 
@@ -43,14 +44,17 @@ http.route({
 
     const providerEventId = readEventId(payload, message.messageId ?? body.slice(0, 64));
 
+    const judgeToken = judgeTokenIn(message.subject);
+
     const result = await ctx.runMutation(internal.emailIngest.recordInbound, {
       providerEventId,
       kind,
       fromAddress: message.from,
-      subject: message.subject,
-      body: message.body,
+      subject: redactJudgeToken(message.subject),
+      body: redactJudgeToken(message.body),
       providerThreadId: message.threadId,
-      rawPayload: body.slice(0, 4000),
+      rawPayload: redactJudgeToken(body).slice(0, 4000),
+      ...(judgeToken === null ? {} : { judgeTokenHash: await hashJudgeToken(judgeToken) }),
     });
 
     return Response.json({ ok: true, stored: result.stored, unmatched: result.unmatched });

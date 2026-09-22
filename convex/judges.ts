@@ -3,6 +3,7 @@ import { action, internalMutation } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { admitVisitor } from "./model/rateLimits";
+import { issueJudgeEmail, type JudgeEmail } from "./judgeEmail";
 
 export interface JudgeStep {
   readonly label: string;
@@ -18,6 +19,7 @@ export interface JudgeRun {
   readonly coverSessionTitle: string | null;
   readonly coverCandidate: string | null;
   readonly coverReasons: readonly string[];
+  readonly judgeEmail: JudgeEmail | null;
 }
 
 export const runDemo = action({
@@ -60,6 +62,7 @@ export const runDemo = action({
         coverSessionTitle: null,
         coverCandidate: null,
         coverReasons: [],
+        judgeEmail: await issueJudgeEmail(ctx, conferenceId, null),
       };
     }
 
@@ -86,6 +89,7 @@ export const runDemo = action({
       coverSessionTitle: dropped.sessionTitle,
       coverCandidate: proposal.candidate === null ? null : proposal.candidate.displayName,
       coverReasons: proposal.candidate === null ? [] : proposal.candidate.reasons,
+      judgeEmail: await issueJudgeEmail(ctx, conferenceId, dropped.membershipId),
     };
   },
 });

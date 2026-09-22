@@ -108,6 +108,10 @@ export const retryReplyParsing = mutation({
       throw new ConvexError("That reply has already been applied");
     }
 
+    if (event.judgeTokenId !== undefined) {
+      throw new ConvexError("Send the email again instead; a judge's email is read once per send.");
+    }
+
     if (event.parseState === "review") {
       throw new ConvexError(
         "That reply was read, but Parallel could not place it. Resolve it by hand instead.",

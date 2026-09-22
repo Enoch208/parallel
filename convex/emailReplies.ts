@@ -65,6 +65,7 @@ export const loadReplyContext = internalQuery({
     return {
       body: event.body,
       handled: event.handled,
+      judgeCapability: event.judgeTokenId !== undefined,
       conferenceId,
       membershipId: event.membershipId,
       timezone: conference.timezone,
@@ -102,6 +103,10 @@ export const resolveCoverReply = internalMutation({
 
     if (event.handled) {
       return { handled: false, reason: "already_handled" as const };
+    }
+
+    if (event.judgeTokenId !== undefined) {
+      return { handled: false, reason: "judge_capability" as const };
     }
 
     if (await isFrozen(ctx, event.conferenceId)) {
@@ -333,10 +338,14 @@ export const applyParsedReply = internalMutation({
     }
 
     const parsed = { intent: args.intent, confidence: args.confidence, quote: args.quote };
+    const judgeLimited = event.judgeTokenId !== undefined && args.intent !== "cant_attend";
 
-    if (!args.applied || args.sessionId === null) {
+    if (!args.applied || args.sessionId === null || judgeLimited) {
       await ctx.db.patch(args.eventId, { ...parsed, handled: false });
-      return { applied: false, reason: "needs_confirmation" as const };
+      return {
+        applied: false,
+        reason: judgeLimited ? ("judge_capability" as const) : ("needs_confirmation" as const),
+      };
     }
 
     const outcome = await applyReplyToSession(ctx, {
@@ -350,6 +359,11 @@ export const applyParsedReply = internalMutation({
     });
 
     await ctx.db.patch(args.eventId, { ...parsed, handled: outcome.applied });
+
+    if (outcome.applied && event.judgeTokenId !== undefined) {
+      await ctx.db.patch(event.judgeTokenId, { revokedAt: Date.now() });
+    }
+
     return outcome;
   },
 });
@@ -444,7 +458,7 @@ export const parseAndApply = internalAction({
 
     const parsed = reading.parsed;
 
-    if (parsed.intent === "yes" || parsed.intent === "no") {
+    if ((parsed.intent === "yes" || parsed.intent === "no") && !context.judgeCapability) {
       const outcome = await ctx.runMutation(internal.emailReplies.resolveCoverReply, {
         eventId: args.eventId,
         accept: parsed.intent === "yes",
@@ -481,7 +495,11 @@ export const parseAndApply = internalAction({
       sessionId = chosen === null ? null : (chosen.id as Id<"sessions">);
     }
 
-    const applied = namesASession && shouldApplyAutomatically(parsed) && sessionId !== null;
+    const applied =
+      namesASession &&
+      shouldApplyAutomatically(parsed) &&
+      sessionId !== null &&
+      (!context.judgeCapability || parsed.intent === "cant_attend");
 
     const outcome = await ctx.runMutation(internal.emailReplies.applyParsedReply, {
       eventId: args.eventId,

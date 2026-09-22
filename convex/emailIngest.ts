@@ -4,6 +4,7 @@ import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { normalizeAddress, tokenFromSubject } from "./model/threadRouting";
 import { queueReplyParse } from "./replyParsing";
+import { rateLimiter } from "./model/rateLimits";
 
 interface RoutedThread {
   readonly conferenceId: Id<"conferences">;
@@ -55,6 +56,40 @@ async function routeToThread(
   return { conferenceId: byToken.conferenceId, membershipId: byToken.membershipId };
 }
 
+interface JudgeRoute extends RoutedThread {
+  readonly tokenId: Id<"judgeTokens">;
+  readonly limited: boolean;
+}
+
+const judgeLimitNotice =
+  "Too many emails for this demo in ten minutes. This one was kept but not read; send it again in a few minutes.";
+
+async function routeByJudgeToken(ctx: MutationCtx, tokenHash: string): Promise<JudgeRoute | null> {
+  const token = await ctx.db
+    .query("judgeTokens")
+    .withIndex("by_hash", (q) => q.eq("tokenHash", tokenHash))
+    .first();
+
+  if (token === null || token.revokedAt !== undefined || token.expiresAt <= Date.now()) {
+    return null;
+  }
+
+  const conference = await ctx.db.get(token.conferenceId);
+
+  if (conference === null || !conference.isDemoData || conference.frozen === true) {
+    return null;
+  }
+
+  const allowance = await rateLimiter.limit(ctx, "judgeEmail", { key: token._id });
+
+  return {
+    conferenceId: token.conferenceId,
+    membershipId: token.membershipId,
+    tokenId: token._id,
+    limited: !allowance.ok,
+  };
+}
+
 export const recordInbound = internalMutation({
   args: {
     providerEventId: v.string(),
@@ -64,6 +99,7 @@ export const recordInbound = internalMutation({
     body: v.string(),
     providerThreadId: v.union(v.string(), v.null()),
     rawPayload: v.optional(v.string()),
+    judgeTokenHash: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const duplicate = await ctx.db
@@ -76,7 +112,12 @@ export const recordInbound = internalMutation({
       return { stored: false, unmatched: false, eventId: null, queued: repaired === "queued" };
     }
 
-    const thread = await routeToThread(ctx, args.providerThreadId, args.subject, args.fromAddress);
+    const routed = await routeToThread(ctx, args.providerThreadId, args.subject, args.fromAddress);
+    const judge =
+      routed === null && args.judgeTokenHash !== undefined
+        ? await routeByJudgeToken(ctx, args.judgeTokenHash)
+        : null;
+    const thread: RoutedThread | null = routed ?? judge;
 
     const eventId = await ctx.db.insert("emailEvents", {
       conferenceId: thread === null ? null : thread.conferenceId,
@@ -92,6 +133,10 @@ export const recordInbound = internalMutation({
       fromAddress: normalizeAddress(args.fromAddress),
       ...(args.rawPayload === undefined ? {} : { rawPayload: args.rawPayload }),
       handled: false,
+      ...(judge === null ? {} : { judgeTokenId: judge.tokenId }),
+      ...(judge?.limited === true
+        ? { parseState: "failed" as const, parseFailure: judgeLimitNotice }
+        : {}),
     });
 
     if (thread !== null) {
@@ -100,7 +145,10 @@ export const recordInbound = internalMutation({
         kind: "reply_received",
         sponsor: "agentmail",
         durationMs: 0,
-        summary: `Reply received from ${normalizeAddress(args.fromAddress)}`,
+        summary:
+          judge === null
+            ? `Reply received from ${normalizeAddress(args.fromAddress)}`
+            : "Reply received from a judge's own email",
       });
     }
 

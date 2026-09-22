@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import type { PlanStatus, SessionConfidence } from "./model/types";
+import { maskAddress } from "./model/judgeToken";
 
 export interface SourceRecord {
   readonly url: string;
@@ -93,7 +94,8 @@ const normalizeQuote = (value: string): string =>
 const toReplyRecord = (event: Doc<"emailEvents">): ReplyRecord => ({
   eventId: event._id,
   receivedAt: event._creationTime,
-  fromAddress: event.fromAddress,
+  fromAddress:
+    event.judgeTokenId === undefined ? event.fromAddress : maskAddress(event.fromAddress),
   subject: event.subject,
   intent: event.intent,
   confidence: event.confidence,

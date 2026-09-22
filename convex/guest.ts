@@ -45,6 +45,8 @@ async function deleteConferenceGraph(
     "notes",
     "briefs",
     "outboundSends",
+    "emailEvents",
+    "judgeTokens",
   ] as const;
 
   for (const table of byConference) {

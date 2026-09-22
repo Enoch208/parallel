@@ -157,11 +157,22 @@ export default defineSchema({
     parseState: v.optional(v.union(v.literal("queued"), v.literal("review"), v.literal("failed"))),
     parseRunId: v.optional(runIdValidator),
     parseFailure: v.optional(v.string()),
+    judgeTokenId: v.optional(v.id("judgeTokens")),
   })
     .index("by_conference", ["conferenceId"])
     .index("by_provider_event", ["providerEventId"])
     .index("by_conference_handled", ["conferenceId", "handled"])
     .index("by_parse_run", ["parseRunId"]),
+
+  judgeTokens: defineTable({
+    tokenHash: v.string(),
+    conferenceId: v.id("conferences"),
+    membershipId: v.id("memberships"),
+    expiresAt: v.number(),
+    revokedAt: v.optional(v.number()),
+  })
+    .index("by_hash", ["tokenHash"])
+    .index("by_conference", ["conferenceId"]),
 
   coverRequests: defineTable({
     conferenceId: v.id("conferences"),

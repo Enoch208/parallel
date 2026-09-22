@@ -10,6 +10,7 @@ import { JudgeCoverCard } from "@/components/judges/judge-cover-card";
 import { ReliabilityPanel } from "@/components/judges/reliability-panel";
 import { ImpactRow } from "@/components/judges/impact-row";
 import { SponsorFlow } from "@/components/judges/sponsor-flow";
+import { JudgeEmailCard } from "@/components/judges/judge-email-card";
 import { errorMessage } from "@/components/setup/setup-shell";
 import { useDemoConference } from "@/lib/use-demo-conference";
 import { appRoutes } from "@/lib/routes";
@@ -96,6 +97,10 @@ export function JudgesPage() {
                 candidate={run.coverCandidate}
                 reasons={run.coverReasons}
               />
+            )}
+
+            {run.judgeEmail !== null && (
+              <JudgeEmailCard conferenceId={run.conferenceId} email={run.judgeEmail} />
             )}
 
             <Link
