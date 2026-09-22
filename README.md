@@ -599,7 +599,7 @@ minutes as sessions end, and guest workspaces older than 24 hours are removed ev
 
 ## Testing
 
-**55 test files and 402 tests**, run on every push in GitHub Actions.
+**57 test files and 409 tests**, run on every push in GitHub Actions.
 
 | Folder               | What it covers                                                                                                                                     |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -633,13 +633,13 @@ share of instances, which is why the exact mode exists.
 
 - **Access boundary.** This hackathon build uses opaque workspace links rather than organization
   authentication: no Convex function checks who is calling, so anyone with a workspace's link can
-  read that workspace and, unless it is frozen, change it. That includes its teammates' email
-  addresses and stored replies, which its public queries return; the masking on the Evidence screen
-  is display-only. Judge and demo workspaces are removed by a cleanup that runs every six hours once
-  they are more than 24 hours old, and one public query lists those awaiting removal. The verified
-  ViVE workspace is intentionally public and read-only. A production deployment handling private
-  company conference data would put authenticated organization membership in front of workspace
-  reads and writes.
+  read that workspace and, unless it is frozen, change it. On a workspace that is not frozen, that
+  includes its teammates' email addresses, which its public queries return. On a frozen workspace,
+  such as the verified ViVE run, every address leaves Convex masked, and a judge's own address is
+  masked on Evidence in every workspace. Judge and demo workspaces are removed by a cleanup that
+  runs every six hours once they are more than 24 hours old. The verified ViVE workspace is
+  intentionally public and read-only. A production deployment handling private company conference
+  data would put authenticated organization membership in front of workspace reads and writes.
 - **Not every provider call is rate-limited.** The older direct `importAgenda` action, scoring and
   the agenda change checks are public and bounded only by provider quotas; the limits cover brief
   generation, demo runs, workflow imports and judge emails.

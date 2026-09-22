@@ -21,7 +21,7 @@ come back as ordinary replies.
 | OpenAI       | Structured outputs in `convex/model/openaiClient.ts`, used by `convex/importWorkflow.ts`, `convex/scoring.ts`, `convex/emailReplies.ts` and `convex/brief.ts`                                                                                                                      |
 | Firecrawl    | The official Convex component in `convex/model/firecrawlComponent.ts`; content hashes in `convex/model/firecrawlClient.ts`; change detection in `convex/agendaWatch.ts`                                                                                                            |
 | AgentMail    | A Svix-verified webhook in `convex/http.ts` and `convex/model/svix.ts`; sends in `convex/emailSend.ts` through `convex/model/agentmailClient.ts`                                                                                                                                   |
-| Proof        | [The verified production run](#the-verified-production-run), the 2:40 video, and 55 test files with 402 tests                                                                                                                                                                      |
+| Proof        | [The verified production run](#the-verified-production-run), the 2:40 video, and 57 test files with 409 tests                                                                                                                                                                      |
 
 ## The verified production run
 
@@ -215,7 +215,7 @@ exactly as a k-track interval scheduling problem rather than estimated.
 The engine is verified by randomized property testing rather than a handful of fixtures: generated
 instances checked for hard-constraint violations, exact-versus-brute-force comparisons with zero
 disagreements, and determinism checked by running the same instance twice and by reversing input
-order. **55 test files, 402 tests, passing locally and in GitHub Actions on 22 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
+order. **57 test files, 409 tests, passing locally and in GitHub Actions on 22 September 2026.** The suite also checks that repair activity reports the coverage of saved assignments,
 excluding proposed cover that has not been accepted. The tests found that beam search alone is genuinely
 suboptimal on a measurable share of instances, which is why the exact mode exists.
 
@@ -223,13 +223,13 @@ suboptimal on a measurable share of instances, which is why the exact mode exist
 
 - **Access boundary.** This hackathon build uses opaque workspace links rather than organization
   authentication: no Convex function checks who is calling, so anyone with a workspace's link can
-  read that workspace and, unless it is frozen, change it. That includes its teammates' email
-  addresses and stored replies, which its public queries return; the masking on the Evidence screen
-  is display-only. Judge and demo workspaces are removed by a cleanup that runs every six hours once
-  they are more than 24 hours old, and one public query lists those awaiting removal. The verified
-  ViVE workspace is intentionally public and read-only. A production deployment handling private
-  company conference data would put authenticated organization membership in front of workspace
-  reads and writes.
+  read that workspace and, unless it is frozen, change it. On a workspace that is not frozen, that
+  includes its teammates' email addresses, which its public queries return. On a frozen workspace,
+  such as the verified ViVE run, every address leaves Convex masked, and a judge's own address is
+  masked on Evidence in every workspace. Judge and demo workspaces are removed by a cleanup that
+  runs every six hours once they are more than 24 hours old. The verified ViVE workspace is
+  intentionally public and read-only. A production deployment handling private company conference
+  data would put authenticated organization membership in front of workspace reads and writes.
 - **Not every provider call is rate-limited.** The older direct `importAgenda` action, scoring and
   the agenda change checks are public and bounded only by provider quotas; the limits cover brief
   generation, demo runs, workflow imports and judge emails.
@@ -558,3 +558,7 @@ The entries below cover substantive feature, bug-fix and test commits from the r
 ### 2026-09-22 - `a6d7403`
 
 [judges] Let a judge break a demo plan with an email of their own, through a one-use, hashed, `cant_attend`-only code that expires in two hours.
+
+### 2026-09-22 - `332485f`
+
+[privacy] Masked every email address that the public verified run's queries returned, and made two uncalled public queries internal.
