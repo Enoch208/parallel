@@ -1,11 +1,5 @@
 import { ConvexError, v } from "convex/values";
-import {
-  internalAction,
-  internalMutation,
-  internalQuery,
-  mutation,
-  query,
-} from "./_generated/server";
+import { internalAction, internalMutation, internalQuery, mutation } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
@@ -30,7 +24,7 @@ import {
 } from "./model/coverAcceptance";
 import { assertWritable, isFrozen } from "./model/frozenConference";
 
-export const pendingReplies = query({
+export const pendingReplies = internalQuery({
   args: { conferenceId: v.id("conferences") },
   handler: async (ctx, args) =>
     ctx.db

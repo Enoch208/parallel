@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import type { PlanStatus, SessionConfidence } from "./model/types";
-import { maskAddress } from "./model/judgeToken";
+import { shownAddress } from "./model/privacy";
 
 export interface SourceRecord {
   readonly url: string;
@@ -91,11 +91,10 @@ const normalizeQuote = (value: string): string =>
     .replace(/\s+/g, " ")
     .replace(/["'“”‘’]/g, "");
 
-const toReplyRecord = (event: Doc<"emailEvents">): ReplyRecord => ({
+const toReplyRecord = (event: Doc<"emailEvents">, hideSender: boolean): ReplyRecord => ({
   eventId: event._id,
   receivedAt: event._creationTime,
-  fromAddress:
-    event.judgeTokenId === undefined ? event.fromAddress : maskAddress(event.fromAddress),
+  fromAddress: shownAddress(event.fromAddress, hideSender || event.judgeTokenId !== undefined),
   subject: event.subject,
   intent: event.intent,
   confidence: event.confidence,
@@ -197,7 +196,7 @@ export const assignmentProvenance = query({
         {
           assignmentId: assignment._id,
           memberName: member.displayName,
-          memberEmail: member.email,
+          memberEmail: shownAddress(member.email, conference.frozen === true),
           sessionTitle: session.title,
           startsAt: session.startsAt,
           endsAt: session.endsAt,
@@ -281,7 +280,7 @@ export const constraintTrail = query({
         endsAt: block.endsAt,
         reason: block.reason,
         sourceQuote: block.sourceQuote,
-        reply: match === undefined ? null : toReplyRecord(match),
+        reply: match === undefined ? null : toReplyRecord(match, conference.frozen === true),
       };
     });
 
@@ -298,7 +297,7 @@ export const constraintTrail = query({
             !claimed.has(event._id) &&
             (event.quote !== null || event.parseState !== undefined),
         )
-        .map(toReplyRecord),
+        .map((event) => toReplyRecord(event, conference.frozen === true)),
     };
   },
 });

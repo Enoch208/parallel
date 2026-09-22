@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, mutation } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { assertWritable } from "./model/frozenConference";
@@ -110,7 +110,7 @@ export const removeConference = internalMutation({
   },
 });
 
-export const expiredGuestWorkspaces = query({
+export const expiredGuestWorkspaces = internalQuery({
   args: {},
   handler: async (ctx) => {
     const cutoff = Date.now() - guestLifetimeMs;

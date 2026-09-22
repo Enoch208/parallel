@@ -16,6 +16,7 @@ import type { BriefGoalInput, BriefNoteInput, BriefSessionInput } from "./model/
 import { assertWritable } from "./model/frozenConference";
 import { assertWritableFromAction } from "./frozen";
 import { rateLimited, rateLimiter } from "./model/rateLimits";
+import { shownAddress } from "./model/privacy";
 
 interface BriefInputs {
   readonly eventName: string;
@@ -273,7 +274,9 @@ export const latest = query({
               id: brief._id,
               body: brief.body,
               model: brief.model,
-              recipients: brief.recipients,
+              recipients: brief.recipients.map((address) =>
+                shownAddress(address, conference.frozen === true),
+              ),
               tripCostEstimate: brief.tripCostEstimate,
               sentAt: brief.sentAt,
               createdAt: brief._creationTime,

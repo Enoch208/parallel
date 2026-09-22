@@ -72,6 +72,7 @@ import type * as model_loadTripSummary from "../model/loadTripSummary.js";
 import type * as model_monitorPayload from "../model/monitorPayload.js";
 import type * as model_naturalPlan from "../model/naturalPlan.js";
 import type * as model_openaiClient from "../model/openaiClient.js";
+import type * as model_privacy from "../model/privacy.js";
 import type * as model_rateLimits from "../model/rateLimits.js";
 import type * as model_replyRetrier from "../model/replyRetrier.js";
 import type * as model_replySchema from "../model/replySchema.js";
@@ -170,6 +171,7 @@ declare const fullApi: ApiFromModules<{
   "model/monitorPayload": typeof model_monitorPayload;
   "model/naturalPlan": typeof model_naturalPlan;
   "model/openaiClient": typeof model_openaiClient;
+  "model/privacy": typeof model_privacy;
   "model/rateLimits": typeof model_rateLimits;
   "model/replyRetrier": typeof model_replyRetrier;
   "model/replySchema": typeof model_replySchema;

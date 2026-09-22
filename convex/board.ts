@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import type { AssignmentSummary, GoalSummary, PlanStatus, SessionSummary } from "./model/types";
+import { shownAddress } from "./model/privacy";
 
 export type PreferenceStance = Doc<"memberPreferences">["stance"];
 
@@ -56,10 +57,10 @@ export interface MemberPreferences {
   readonly preferences: readonly MemberPreference[];
 }
 
-const toMemberSummary = (doc: Doc<"memberships">): TeamMemberSummary => ({
+const toMemberSummary = (doc: Doc<"memberships">, hideEmail: boolean): TeamMemberSummary => ({
   id: doc._id,
   displayName: doc.displayName,
-  email: doc.email,
+  email: shownAddress(doc.email, hideEmail),
   isLead: doc.isLead,
 });
 
@@ -116,7 +117,7 @@ export const conferenceOverview = query({
         frozen: conference.frozen === true,
       },
       goals: goals.map(toGoalSummary),
-      members: members.map(toMemberSummary),
+      members: members.map((member) => toMemberSummary(member, conference.frozen === true)),
     };
   },
 });
@@ -222,7 +223,7 @@ export const memberPreferences = query({
       }
     }
     return members.map((member) => ({
-      member: toMemberSummary(member),
+      member: toMemberSummary(member, conference.frozen === true),
       preferences: byMembershipId.get(member._id) ?? [],
     }));
   },

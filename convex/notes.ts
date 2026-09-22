@@ -4,6 +4,7 @@ import type { QueryCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { assertWritable } from "./model/frozenConference";
+import { shownAddress } from "./model/privacy";
 
 const noteSource = v.union(v.literal("email"), v.literal("app"));
 
@@ -243,12 +244,16 @@ export const addBriefRecipient = mutation({
 export const briefRecipients = query({
   args: { conferenceId: v.id("conferences") },
   handler: async (ctx, args) => {
+    const conference = await ctx.db.get(args.conferenceId);
     const rows = await ctx.db
       .query("briefRecipients")
       .withIndex("by_conference", (q) => q.eq("conferenceId", args.conferenceId))
       .collect();
 
-    return rows.map((row) => ({ id: row._id, email: row.email }));
+    return rows.map((row) => ({
+      id: row._id,
+      email: shownAddress(row.email, conference?.frozen === true),
+    }));
   },
 });
 
