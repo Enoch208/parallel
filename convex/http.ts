@@ -53,12 +53,6 @@ http.route({
       rawPayload: body.slice(0, 4000),
     });
 
-    if (result.stored && !result.unmatched && result.eventId !== null) {
-      await ctx.runMutation(internal.emailReplies.queueReplyParsing, {
-        eventId: result.eventId,
-      });
-    }
-
     return Response.json({ ok: true, stored: result.stored, unmatched: result.unmatched });
   }),
 });

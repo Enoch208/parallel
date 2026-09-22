@@ -5,6 +5,7 @@ import { Mail01Icon } from "@hugeicons/core-free-icons";
 import { formatTimeRange } from "@/lib/format-time";
 import { EvidenceEmpty, Quoted } from "./evidence-primitives";
 import { ResolveReply } from "./resolve-reply";
+import { ParseState } from "./retry-parse";
 
 function ReplyLine({ reply }: { reply: ReplyRecord }) {
   const parts = [
@@ -100,15 +101,17 @@ export function ConstraintEvidence({
             Inbound replies that did not create a block
           </h4>
           <p className="text-[11px] leading-relaxed font-light text-neutral-500">
-            These arrived and were parsed, but Parallel could not tell which session they meant, so
-            it applied nothing rather than guess. A person can resolve one below; the original email
-            is kept and the change is recorded as resolved by hand.
+            These arrived but changed nothing yet: Parallel is still reading them, could not tell
+            which session they meant, or could not read them at all. It applied nothing rather than
+            guess. A person can resolve one below; the original email is kept and the change is
+            recorded as resolved by hand.
           </p>
           <ul className="flex min-w-0 flex-col gap-2 pt-1">
             {trail.unlinkedReplies.map((reply) => (
               <li key={reply.eventId} className="flex min-w-0 flex-col gap-1.5">
                 {reply.quote !== null && <Quoted text={reply.quote} />}
                 <ReplyLine reply={reply} />
+                <ParseState reply={reply} />
                 <ResolveReply reply={reply} conferenceId={conferenceId} timezone={timezone} />
               </li>
             ))}

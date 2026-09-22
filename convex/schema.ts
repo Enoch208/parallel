@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { runIdValidator } from "@convex-dev/action-retrier";
 
 const confidence = v.union(v.literal("high"), v.literal("low"));
 
@@ -153,10 +154,14 @@ export default defineSchema({
     rawPayload: v.optional(v.string()),
     handled: v.boolean(),
     resolvedByHand: v.optional(v.boolean()),
+    parseState: v.optional(v.union(v.literal("queued"), v.literal("review"), v.literal("failed"))),
+    parseRunId: v.optional(runIdValidator),
+    parseFailure: v.optional(v.string()),
   })
     .index("by_conference", ["conferenceId"])
     .index("by_provider_event", ["providerEventId"])
-    .index("by_conference_handled", ["conferenceId", "handled"]),
+    .index("by_conference_handled", ["conferenceId", "handled"])
+    .index("by_parse_run", ["parseRunId"]),
 
   coverRequests: defineTable({
     conferenceId: v.id("conferences"),

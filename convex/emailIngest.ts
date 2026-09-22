@@ -3,6 +3,7 @@ import { internalMutation } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { normalizeAddress, tokenFromSubject } from "./model/threadRouting";
+import { queueReplyParse } from "./replyParsing";
 
 interface RoutedThread {
   readonly conferenceId: Id<"conferences">;
@@ -71,7 +72,8 @@ export const recordInbound = internalMutation({
       .first();
 
     if (duplicate !== null) {
-      return { stored: false, unmatched: false, eventId: null };
+      const repaired = await queueReplyParse(ctx, duplicate, false);
+      return { stored: false, unmatched: false, eventId: null, queued: repaired === "queued" };
     }
 
     const thread = await routeToThread(ctx, args.providerThreadId, args.subject, args.fromAddress);
@@ -102,6 +104,9 @@ export const recordInbound = internalMutation({
       });
     }
 
-    return { stored: true, unmatched: thread === null, eventId };
+    const stored = await ctx.db.get(eventId);
+    const queued = stored === null ? "not_needed" : await queueReplyParse(ctx, stored, false);
+
+    return { stored: true, unmatched: thread === null, eventId, queued: queued === "queued" };
   },
 });

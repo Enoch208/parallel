@@ -85,7 +85,7 @@ it("retries a reply after OpenAI is briefly unavailable, and applies it once", a
   const { t, fixture, eventId } = await inboundReply(body);
   replies.push(503);
 
-  await t.mutation(internal.emailReplies.queueReplyParsing, { eventId });
+  await t.mutation(internal.replyParsing.ensureParseQueued, { eventId });
   await t.finishAllScheduledFunctions(vi.runAllTimers);
 
   const event = await t.run(async (ctx) => ctx.db.get(eventId));
@@ -99,7 +99,7 @@ it("does not retry a reply OpenAI refused, and leaves it for a person", async ()
   const { t, fixture, eventId } = await inboundReply(body);
   replies.push(400);
 
-  await t.mutation(internal.emailReplies.queueReplyParsing, { eventId });
+  await t.mutation(internal.replyParsing.ensureParseQueued, { eventId });
   await t.finishAllScheduledFunctions(vi.runAllTimers);
 
   const { event, notices } = await t.run(async (ctx) => ({

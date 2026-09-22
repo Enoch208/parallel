@@ -90,6 +90,7 @@ import type * as model_zonedTime from "../model/zonedTime.js";
 import type * as notes from "../notes.js";
 import type * as plan from "../plan.js";
 import type * as reliability from "../reliability.js";
+import type * as replyParsing from "../replyParsing.js";
 import type * as scoring from "../scoring.js";
 import type * as scoringReuse from "../scoringReuse.js";
 import type * as team from "../team.js";
@@ -185,6 +186,7 @@ declare const fullApi: ApiFromModules<{
   notes: typeof notes;
   plan: typeof plan;
   reliability: typeof reliability;
+  replyParsing: typeof replyParsing;
   scoring: typeof scoring;
   scoringReuse: typeof scoringReuse;
   team: typeof team;

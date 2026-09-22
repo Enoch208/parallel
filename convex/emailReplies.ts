@@ -14,7 +14,6 @@ import {
   isTransientProviderFailure,
   structuredOutput,
 } from "./model/openaiClient";
-import { replyRetrier } from "./model/replyRetrier";
 import {
   parseReply,
   replyExtractionSchema,
@@ -363,12 +362,6 @@ export interface ParseAndApplyResult {
   readonly matchedSession?: Id<"sessions"> | null;
   readonly reason: string | null;
 }
-
-export const queueReplyParsing = internalMutation({
-  args: { eventId: v.id("emailEvents") },
-  handler: async (ctx, args): Promise<string> =>
-    replyRetrier.run(ctx, internal.emailReplies.parseAndApply, { eventId: args.eventId }),
-});
 
 export const recordUnreadableReply = internalMutation({
   args: { eventId: v.id("emailEvents"), detail: v.string() },

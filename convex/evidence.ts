@@ -50,6 +50,8 @@ export interface ReplyRecord {
   readonly confidence: number | null;
   readonly quote: string | null;
   readonly resolvedByHand: boolean;
+  readonly parseState: "queued" | "review" | "failed" | null;
+  readonly parseFailure: string | null;
 }
 
 export interface ConstraintRecord {
@@ -97,6 +99,8 @@ const toReplyRecord = (event: Doc<"emailEvents">): ReplyRecord => ({
   confidence: event.confidence,
   quote: event.quote,
   resolvedByHand: event.resolvedByHand === true,
+  parseState: event.parseState ?? null,
+  parseFailure: event.parseFailure ?? null,
 });
 
 export const agendaProvenance = query({
@@ -283,8 +287,15 @@ export const constraintTrail = query({
 
     return {
       blocks: linkedBlocks,
-      unlinkedReplies: inbound
-        .filter((event) => !claimed.has(event._id) && !event.handled)
+      unlinkedReplies: events
+        .filter(
+          (event) =>
+            event.direction === "inbound" &&
+            event.membershipId !== null &&
+            !event.handled &&
+            !claimed.has(event._id) &&
+            (event.quote !== null || event.parseState !== undefined),
+        )
         .map(toReplyRecord),
     };
   },
