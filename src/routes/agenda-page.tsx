@@ -13,6 +13,7 @@ import { ImportSummary } from "@/components/setup/import-summary";
 import { SessionList } from "@/components/setup/session-list";
 import { errorMessage } from "@/components/setup/setup-shell";
 import { useDemoConference } from "@/lib/use-demo-conference";
+import { visitorKey } from "@/lib/visitor-key";
 
 const pageDescription =
   "Every session Parallel imported, with the published page behind each one. Nothing here is typed by hand.";
@@ -48,7 +49,7 @@ export function AgendaPage() {
     setResult(null);
 
     try {
-      const started = await beginImport(request);
+      const started = await beginImport({ ...request, visitorKey: visitorKey() });
       setWorkflowId(started.workflowId);
       remember(started.conferenceId);
     } catch (error) {

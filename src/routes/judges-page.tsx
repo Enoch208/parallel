@@ -14,6 +14,7 @@ import { errorMessage } from "@/components/setup/setup-shell";
 import { useDemoConference } from "@/lib/use-demo-conference";
 import { appRoutes } from "@/lib/routes";
 import { verifiedRunConferenceId, verifiedRunHref } from "@/lib/verified-run";
+import { visitorKey } from "@/lib/visitor-key";
 
 export function JudgesPage() {
   const runDemo = useAction(api.judges.runDemo);
@@ -30,7 +31,7 @@ export function JudgesPage() {
     setError(null);
 
     try {
-      const result = await runDemo({});
+      const result = await runDemo({ visitorKey: visitorKey() });
       setRun(result);
       remember(result.conferenceId);
     } catch (thrown) {

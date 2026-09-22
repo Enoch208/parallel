@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { action, internalMutation } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
+import { admitVisitor } from "./model/rateLimits";
 
 export interface JudgeStep {
   readonly label: string;
@@ -20,8 +21,15 @@ export interface JudgeRun {
 }
 
 export const runDemo = action({
-  args: {},
-  handler: async (ctx): Promise<JudgeRun> => {
+  args: { visitorKey: v.string() },
+  handler: async (ctx, args): Promise<JudgeRun> => {
+    await admitVisitor(
+      ctx,
+      "judgeDemo",
+      args.visitorKey,
+      "This browser has started several demo workspaces in a short time.",
+    );
+
     const conferenceId = await ctx.runMutation(api.demo.seedDemoWorkspace, {});
     const steps: JudgeStep[] = [];
 

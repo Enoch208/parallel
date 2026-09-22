@@ -19,6 +19,7 @@ import { zonedTimeToEpoch } from "./model/zonedTime";
 import { assertConferenceTimezone } from "./model/timezone";
 import { importWorkflows, scoringPool } from "./model/workpools";
 import { assessScoring, describeScoring } from "./model/scoringCompleteness";
+import { admitVisitor } from "./model/rateLimits";
 
 const scoringFinishedEvent = "importScoringFinished";
 
@@ -351,12 +352,20 @@ export const startImport = mutation({
     timezone: v.string(),
     dayMarker: v.union(v.string(), v.null()),
     goals: v.optional(v.array(goalInput)),
+    visitorKey: v.string(),
   },
   handler: async (
     ctx,
     args,
   ): Promise<{ workflowId: WorkflowId; conferenceId: Id<"conferences"> }> => {
     assertConferenceTimezone(args.timezone);
+
+    await admitVisitor(
+      ctx,
+      "agendaImport",
+      args.visitorKey,
+      "This browser has imported several agendas in the last hour.",
+    );
 
     const created: { teamId: Id<"teams">; conferenceId: Id<"conferences"> } = await ctx.runMutation(
       internal.importWrites.createConference,

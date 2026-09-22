@@ -83,6 +83,7 @@ import type * as model_threadRouting from "../model/threadRouting.js";
 import type * as model_timezone from "../model/timezone.js";
 import type * as model_titleSimilarity from "../model/titleSimilarity.js";
 import type * as model_types from "../model/types.js";
+import type * as model_visitorKey from "../model/visitorKey.js";
 import type * as model_webhookPayload from "../model/webhookPayload.js";
 import type * as model_workpools from "../model/workpools.js";
 import type * as model_zonedTime from "../model/zonedTime.js";
@@ -177,6 +178,7 @@ declare const fullApi: ApiFromModules<{
   "model/timezone": typeof model_timezone;
   "model/titleSimilarity": typeof model_titleSimilarity;
   "model/types": typeof model_types;
+  "model/visitorKey": typeof model_visitorKey;
   "model/webhookPayload": typeof model_webhookPayload;
   "model/workpools": typeof model_workpools;
   "model/zonedTime": typeof model_zonedTime;
