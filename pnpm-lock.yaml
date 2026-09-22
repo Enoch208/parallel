@@ -11,6 +11,9 @@ importers:
       '@agentmail/convex':
         specifier: 0.1.0
         version: 0.1.0(convex-helpers@0.1.124(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)(zod@4.6.5))(convex@1.46.0(react@19.3.0))
+      '@convex-dev/action-retrier':
+        specifier: 0.3.1
+        version: 0.3.1(convex@1.46.0(react@19.3.0))
       '@convex-dev/rate-limiter':
         specifier: 0.4.0
         version: 0.4.0(convex@1.46.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)(zod@4.6.5)
@@ -189,6 +192,11 @@ packages:
 
   '@cacheable/utils@2.5.0':
     resolution: {integrity: sha512-buipgOVDkkPXNR5+xBpDw7Zk2n1EvU7qBJCNUcL7rhQ//kfpOXPAvQ511Os0vpLYJ1pZnvudNytkQt2hst3wqA==}
+
+  '@convex-dev/action-retrier@0.3.1':
+    resolution: {integrity: sha512-uji7ZV4GYN24fgnV9FrXABbq2mWCpcMohkEa2ie1zmD5S7ioSxNNBE0lNPB1jlMzICqWCTrbSTr68bgJPag6Ww==}
+    peerDependencies:
+      convex: ^1.24.8
 
   '@convex-dev/batch-worker@0.2.2':
     resolution: {integrity: sha512-3knigElzTVhWw1sN28EYkGBTdrJZ03vMj2PJPuFq3V0Tg41i7tcv/EWDBFQWcUaKzBWWVw693hcJtxCF3CRtEw==}
@@ -1747,6 +1755,10 @@ snapshots:
     dependencies:
       hashery: 1.5.1
       keyv: 5.6.0
+
+  '@convex-dev/action-retrier@0.3.1(convex@1.46.0(react@19.3.0))':
+    dependencies:
+      convex: 1.46.0(react@19.3.0)
 
   '@convex-dev/batch-worker@0.2.2(convex@1.46.0(react@19.3.0))(react@19.3.0)':
     dependencies:

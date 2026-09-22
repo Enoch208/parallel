@@ -71,6 +71,7 @@ import type * as model_monitorPayload from "../model/monitorPayload.js";
 import type * as model_naturalPlan from "../model/naturalPlan.js";
 import type * as model_openaiClient from "../model/openaiClient.js";
 import type * as model_rateLimits from "../model/rateLimits.js";
+import type * as model_replyRetrier from "../model/replyRetrier.js";
 import type * as model_replySchema from "../model/replySchema.js";
 import type * as model_scoreFingerprint from "../model/scoreFingerprint.js";
 import type * as model_scoringCompleteness from "../model/scoringCompleteness.js";
@@ -164,6 +165,7 @@ declare const fullApi: ApiFromModules<{
   "model/naturalPlan": typeof model_naturalPlan;
   "model/openaiClient": typeof model_openaiClient;
   "model/rateLimits": typeof model_rateLimits;
+  "model/replyRetrier": typeof model_replyRetrier;
   "model/replySchema": typeof model_replySchema;
   "model/scoreFingerprint": typeof model_scoreFingerprint;
   "model/scoringCompleteness": typeof model_scoringCompleteness;
@@ -220,4 +222,5 @@ export declare const components: {
   scoringPool: import("@convex-dev/workpool/_generated/component.js").ComponentApi<"scoringPool">;
   firecrawl: import("@firecrawl/firecrawl-convex/_generated/component.js").ComponentApi<"firecrawl">;
   rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
+  actionRetrier: import("@convex-dev/action-retrier/_generated/component.js").ComponentApi<"actionRetrier">;
 };

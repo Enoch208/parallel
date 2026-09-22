@@ -11,32 +11,55 @@ export interface StructuredRequest {
   readonly apiKey: string;
 }
 
-export async function structuredOutput(request: StructuredRequest): Promise<unknown> {
-  const response = await fetch(responsesEndpoint, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${request.apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: request.model,
-      input: [
-        { role: "system", content: request.system },
-        { role: "user", content: request.user },
-      ],
-      text: {
-        format: {
-          type: "json_schema",
-          name: request.schemaName,
-          strict: true,
-          schema: request.schema,
-        },
+export class ProviderUnavailable extends Error {}
+
+export class ProviderRefusal extends Error {}
+
+export function isTransientProviderFailure(error: unknown): boolean {
+  return error instanceof ProviderUnavailable;
+}
+
+function isTransientStatus(status: number): boolean {
+  return status === 429 || status >= 500;
+}
+
+async function post(request: StructuredRequest): Promise<Response> {
+  try {
+    return await fetch(responsesEndpoint, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${request.apiKey}`,
+        "Content-Type": "application/json",
       },
-    }),
-  });
+      body: JSON.stringify({
+        model: request.model,
+        input: [
+          { role: "system", content: request.system },
+          { role: "user", content: request.user },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: request.schemaName,
+            strict: true,
+            schema: request.schema,
+          },
+        },
+      }),
+    });
+  } catch (error) {
+    throw new ProviderUnavailable("OpenAI could not be reached", { cause: error });
+  }
+}
+
+export async function structuredOutput(request: StructuredRequest): Promise<unknown> {
+  const response = await post(request);
 
   if (!response.ok) {
-    throw new Error(`OpenAI returned ${String(response.status)}`);
+    const message = `OpenAI returned ${String(response.status)}`;
+    throw isTransientStatus(response.status)
+      ? new ProviderUnavailable(message)
+      : new ProviderRefusal(message);
   }
 
   const payload = (await response.json()) as {
@@ -52,8 +75,14 @@ export async function structuredOutput(request: StructuredRequest): Promise<unkn
     .join("");
 
   if (text.length === 0) {
-    throw new Error("OpenAI returned no structured output");
+    throw new ProviderRefusal("OpenAI returned no structured output");
   }
 
-  return JSON.parse(text);
+  try {
+    return JSON.parse(text) as unknown;
+  } catch (error) {
+    throw new ProviderRefusal("OpenAI returned structured output that was not JSON", {
+      cause: error,
+    });
+  }
 }

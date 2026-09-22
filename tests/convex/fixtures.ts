@@ -1,5 +1,6 @@
 import { convexTest } from "convex-test";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import actionRetrierTest from "@convex-dev/action-retrier/test";
 import schema from "../../convex/schema";
 import type { Id } from "../../convex/_generated/dataModel";
 import type { MutationCtx } from "../../convex/_generated/server";
@@ -38,6 +39,7 @@ export interface CoverFixture {
 export function freshHarness() {
   const t = convexTest(schema, convexModules);
   rateLimiterTest.register(t);
+  actionRetrierTest.register(t);
   return t;
 }
 

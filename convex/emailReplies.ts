@@ -9,7 +9,12 @@ import {
 import type { MutationCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { structuredOutput, extractionModel } from "./model/openaiClient";
+import {
+  extractionModel,
+  isTransientProviderFailure,
+  structuredOutput,
+} from "./model/openaiClient";
+import { replyRetrier } from "./model/replyRetrier";
 import {
   parseReply,
   replyExtractionSchema,
@@ -60,6 +65,7 @@ export const loadReplyContext = internalQuery({
 
     return {
       body: event.body,
+      handled: event.handled,
       conferenceId,
       membershipId: event.membershipId,
       timezone: conference.timezone,
@@ -93,6 +99,10 @@ export const resolveCoverReply = internalMutation({
 
     if (event === null || event.conferenceId === null || event.membershipId === null) {
       return { handled: false, reason: "unmatched" as const };
+    }
+
+    if (event.handled) {
+      return { handled: false, reason: "already_handled" as const };
     }
 
     if (await isFrozen(ctx, event.conferenceId)) {
@@ -315,6 +325,10 @@ export const applyParsedReply = internalMutation({
       return { applied: false, reason: "unmatched" as const };
     }
 
+    if (event.handled) {
+      return { applied: false, reason: "already_handled" as const };
+    }
+
     if (await isFrozen(ctx, event.conferenceId)) {
       return { applied: false, reason: "frozen" as const };
     }
@@ -350,15 +364,59 @@ export interface ParseAndApplyResult {
   readonly reason: string | null;
 }
 
+export const queueReplyParsing = internalMutation({
+  args: { eventId: v.id("emailEvents") },
+  handler: async (ctx, args): Promise<string> =>
+    replyRetrier.run(ctx, internal.emailReplies.parseAndApply, { eventId: args.eventId }),
+});
+
+export const recordUnreadableReply = internalMutation({
+  args: { eventId: v.id("emailEvents"), detail: v.string() },
+  handler: async (ctx, args) => {
+    const event = await ctx.db.get(args.eventId);
+
+    if (event === null || event.conferenceId === null || event.handled) {
+      return { recorded: false };
+    }
+
+    await ctx.db.insert("activity", {
+      conferenceId: event.conferenceId,
+      kind: "reply_unreadable",
+      sponsor: "openai",
+      durationMs: 0,
+      summary: `A reply could not be read automatically (${args.detail}). It is waiting on the Evidence screen for a person.`,
+    });
+
+    return { recorded: true };
+  },
+});
+
+async function readReply(
+  body: string,
+  apiKey: string,
+): Promise<{ parsed: ReturnType<typeof parseReply> } | { unreadable: string }> {
+  try {
+    const raw = await structuredOutput({
+      model: extractionModel,
+      system: replySystemPrompt,
+      user: body,
+      schemaName: "reply",
+      schema: replyExtractionSchema,
+      apiKey,
+    });
+    return { parsed: parseReply(raw, body) };
+  } catch (error) {
+    if (isTransientProviderFailure(error)) {
+      throw error;
+    }
+
+    return { unreadable: error instanceof Error ? error.message : "the model gave no answer" };
+  }
+}
+
 export const parseAndApply = internalAction({
   args: { eventId: v.id("emailEvents") },
   handler: async (ctx, args): Promise<ParseAndApplyResult> => {
-    const apiKey = process.env.OPENAI_API_KEY;
-
-    if (apiKey === undefined || apiKey.length === 0) {
-      throw new Error("OPENAI_API_KEY is not set on this deployment");
-    }
-
     const context = await ctx.runQuery(internal.emailReplies.loadReplyContext, {
       eventId: args.eventId,
     });
@@ -367,16 +425,31 @@ export const parseAndApply = internalAction({
       return { applied: false, intent: null, reason: "unmatched" as const };
     }
 
-    const raw = await structuredOutput({
-      model: extractionModel,
-      system: replySystemPrompt,
-      user: context.body,
-      schemaName: "reply",
-      schema: replyExtractionSchema,
-      apiKey,
-    });
+    if (context.handled) {
+      return { applied: false, intent: null, reason: "already_handled" as const };
+    }
 
-    const parsed = parseReply(raw, context.body);
+    const apiKey = process.env.OPENAI_API_KEY;
+
+    if (apiKey === undefined || apiKey.length === 0) {
+      await ctx.runMutation(internal.emailReplies.recordUnreadableReply, {
+        eventId: args.eventId,
+        detail: "OPENAI_API_KEY is not set on this deployment",
+      });
+      return { applied: false, intent: null, reason: "model_not_configured" as const };
+    }
+
+    const reading = await readReply(context.body, apiKey);
+
+    if ("unreadable" in reading) {
+      await ctx.runMutation(internal.emailReplies.recordUnreadableReply, {
+        eventId: args.eventId,
+        detail: reading.unreadable,
+      });
+      return { applied: false, intent: null, reason: "unreadable" as const };
+    }
+
+    const parsed = reading.parsed;
 
     if (parsed.intent === "yes" || parsed.intent === "no") {
       const outcome = await ctx.runMutation(internal.emailReplies.resolveCoverReply, {

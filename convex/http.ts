@@ -54,7 +54,7 @@ http.route({
     });
 
     if (result.stored && !result.unmatched && result.eventId !== null) {
-      await ctx.scheduler.runAfter(0, internal.emailReplies.parseAndApply, {
+      await ctx.runMutation(internal.emailReplies.queueReplyParsing, {
         eventId: result.eventId,
       });
     }
